@@ -4,31 +4,32 @@ Rodzinna gra strategiczno-ekonomiczna (2–4 graczy, od 10 lat, ok. 45–60 min)
 w której prawie nic nie zależy od losu. Najpierw wersja przeglądarkowa
 (każdy gracz na swoim urządzeniu), docelowo także planszówka.
 
+**Zagraj:** https://celif89.github.io/card_games/
+
 - [Zasady gry (wersja robocza 0.1)](docs/ZASADY.md)
 
-## Jak zagrać w domu
+## Jak zagrać
 
-Potrzebny jest komputer z zainstalowanym [Node.js](https://nodejs.org) (wersja 22 lub nowsza),
-który będzie serwerem gry. Telefony i inne komputery łączą się z nim przez domowe Wi-Fi.
+1. Jedna osoba (gospodarz) otwiera grę i klika „Załóż nową grę”.
+2. Pozostali skanują telefonem kod QR z ekranu gospodarza albo otwierają wysłany link.
+3. Gospodarz klika „Rozpocznij grę”.
 
-```bash
-npm install     # tylko za pierwszym razem
-npm start       # buduje grę i uruchamia serwer na porcie 3000
-```
-
-Serwer wypisze adresy, np. `http://192.168.1.23:3000`. Otwórz ten adres
-na każdym urządzeniu w tej samej sieci Wi-Fi. Jedna osoba zakłada grę,
-a pozostali wpisują 4-literowy kod pokoju.
-
-Po odświeżeniu strony albo wybudzeniu telefonu gra sama wraca do pokoju.
+Nic nie trzeba instalować. Gra działa w przeglądarce gospodarza, a pozostali łączą się z nim
+bezpośrednio (WebRTC), więc **gospodarz nie może zamknąć karty z grą** do końca rozgrywki.
+Odświeżenie strony, także u gospodarza, nie przerywa gry. Potrzebny jest internet.
 
 ## Dla programisty
 
 ```bash
-npm run dev        # serwer + klient z automatycznym przeładowaniem (http://localhost:5173)
-npm test           # testy silnika, w tym symulacja pełnych gier rozgrywanych przez boty
+npm install
+npm run dev        # gra z automatycznym przeładowaniem (http://localhost:5173)
+npm test           # testy silnika i pokoju, w tym symulacja pełnych gier rozgrywanych przez boty
 npm run typecheck  # sprawdzenie typów TypeScript
+npm run build      # wersja do publikacji w katalogu dist/
 ```
+
+Każdy push na gałąź `main` (albo `claude/elegant-planck-3t9lrh`) publikuje grę
+na GitHub Pages (`.github/workflows/pages.yml`).
 
 Struktura:
 
@@ -37,5 +38,8 @@ Struktura:
   - `engine.ts` — przebieg gry i akcje graczy.
   - `rules.ts` — obliczenia: czynsz, ceny, opcje budowy, punktacja.
   - `bot.ts` — prosty bot (na razie do testów).
-- `src/server/` — serwer Node.js: pokoje, WebSocket, ukrywanie ofert w licytacji.
-- `src/client/` — interfejs w React.
+- `src/net/` — pokój gry prowadzony przez gospodarza: gracze, tokeny powrotu, ukrywanie ofert w licytacji.
+- `src/client/` — interfejs w React oraz połączenia PeerJS (`net.ts`).
+
+Do łączenia graczy służy darmowy publiczny serwer PeerJS (tylko do zestawienia połączenia).
+Na potrzeby testów można wskazać własny: `VITE_PEER_HOST=127.0.0.1:9000 npm run build`.

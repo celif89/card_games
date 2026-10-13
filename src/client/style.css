@@ -627,3 +627,24 @@ select {
   padding: 8px;
   overflow-x: auto;
 }
+
+.center {
+  text-align: center;
+}
+.qr {
+  width: 220px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 6px;
+}
+.qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.topbar-links {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}

@@ -31,7 +31,7 @@ import {
   turnOrder,
 } from '../engine/rules.ts';
 import type { Action, GameView, Lot, Materials, Player, TradeBundle } from '../engine/types.ts';
-import type { Connection } from './net.ts';
+import { net } from './net.ts';
 import { RulesModal } from './Rules.tsx';
 
 type Act = (a: Action) => void;
@@ -56,9 +56,8 @@ function isStartLot(lot: Lot) {
   return !lot.owner && lot.auctionNo === null && ['Z', 'L', 'G'].includes(lot.terrain);
 }
 
-export function Game({ conn }: { conn: Connection }) {
-  const view = conn.view!;
-  const act: Act = (action) => conn.send({ t: 'action', action });
+export function Game({ view }: { view: GameView }) {
+  const act: Act = (action) => net.send({ t: 'action', action });
   const [selected, setSelected] = useState<string | null>(null);
   const [rules, setRules] = useState(false);
   const me = playerOf(view, view.me)!;
@@ -81,9 +80,12 @@ export function Game({ conn }: { conn: Connection }) {
             💰{me.money} 🪵{me.materials.wood} 🧱{me.materials.brick} 🔩{me.materials.steel} ⭐{me.prestige} · 👔{me.managersLeft}/{me.managers}
           </div>
         </div>
-        <button className="link" onClick={() => setRules(true)}>
-          📖 Zasady
-        </button>
+        <div className="topbar-links">
+          <button className="link" onClick={() => setRules(true)}>
+            📖 Zasady
+          </button>
+          <LeaveButton view={view} />
+        </div>
       </header>
       {rules && <RulesModal onClose={() => setRules(false)} />}
 
@@ -107,6 +109,22 @@ export function Game({ conn }: { conn: Connection }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function LeaveButton({ view }: { view: GameView }) {
+  const isHost = net.state.host === view.me;
+  const over = view.phase === 'gameOver';
+  if (!isHost && !over) return null;
+  const question = isHost
+    ? over
+      ? 'Zamknąć pokój? Wszyscy wrócą do ekranu startowego.'
+      : 'Jesteś gospodarzem — wyjście zakończy grę dla wszystkich. Na pewno?'
+    : 'Wyjść do ekranu startowego?';
+  return (
+    <button className="link" onClick={() => confirm(question) && net.leave()}>
+      {isHost ? (over ? 'Nowa gra' : 'Zakończ') : 'Wyjdź'}
+    </button>
   );
 }
 
