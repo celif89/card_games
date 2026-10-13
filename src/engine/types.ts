@@ -32,6 +32,7 @@ export interface Player {
   hired: boolean;
   contracts: string[];
   connected: boolean;
+  bot: boolean;
 }
 
 export interface TradeOffer {

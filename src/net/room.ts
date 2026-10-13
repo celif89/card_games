@@ -1,6 +1,8 @@
 // Pokój gry prowadzony przez gospodarza (w jego przeglądarce). Niezależny od sposobu przesyłania wiadomości.
 import { GameError, addPlayer, applyAction, createGame, removePlayer, setConnected, startGame, viewFor } from '../engine/engine.ts';
-import type { GameState } from '../engine/types.ts';
+import { botAction, botTradeResponse } from '../engine/bot.ts';
+import { MAX_PLAYERS } from '../engine/data.ts';
+import type { Action, GameState } from '../engine/types.ts';
 import type { ClientMessage, ServerMessage } from './protocol.ts';
 
 export interface Client {
@@ -16,13 +18,25 @@ export interface RoomSnapshot {
 
 const newId = () => crypto.randomUUID();
 
+const BOT_NAMES = ['Robo-Basia', 'Robo-Zenek', 'Robo-Krysia', 'Robo-Mietek'];
+
+// Jak długo bot „myśli” przed ruchem — żeby ludzie widzieli, co się dzieje.
+const BOT_DELAY_MS = { action: 900, bid: 400, trade: 600 };
+
+export type Scheduler = (fn: () => void, ms: number) => void;
+
 export class Room {
   private state: GameState;
   private tokens: Record<string, string>;
   readonly host: string;
   private clients = new Map<Client, string>();
+  private botPending = false;
 
-  private constructor(snapshot: RoomSnapshot, private onChange: (s: RoomSnapshot) => void) {
+  private constructor(
+    snapshot: RoomSnapshot,
+    private onChange: (s: RoomSnapshot) => void,
+    private schedule: Scheduler,
+  ) {
     this.state = snapshot.state;
     this.tokens = snapshot.tokens;
     this.host = snapshot.host;
@@ -31,16 +45,16 @@ export class Room {
   }
 
   // Nowy pokój: gospodarz od razu jest pierwszym graczem.
-  static create(hostName: string, onChange: (s: RoomSnapshot) => void): { room: Room; hostToken: string } {
+  static create(hostName: string, onChange: (s: RoomSnapshot) => void, schedule: Scheduler = (fn, ms) => setTimeout(fn, ms)): { room: Room; hostToken: string } {
     const host = newId();
     const token = newId();
-    const room = new Room({ state: addPlayer(createGame(), host, hostName), tokens: { [host]: token }, host }, onChange);
+    const room = new Room({ state: addPlayer(createGame(), host, hostName), tokens: { [host]: token }, host }, onChange, schedule);
     room.save();
     return { room, hostToken: token };
   }
 
-  static restore(snapshot: RoomSnapshot, onChange: (s: RoomSnapshot) => void): Room {
-    return new Room(snapshot, onChange);
+  static restore(snapshot: RoomSnapshot, onChange: (s: RoomSnapshot) => void, schedule: Scheduler = (fn, ms) => setTimeout(fn, ms)): Room {
+    return new Room(snapshot, onChange, schedule);
   }
 
   get snapshot(): RoomSnapshot {
@@ -103,6 +117,22 @@ export class Room {
         this.broadcast();
         return;
       }
+      case 'addBot': {
+        if (playerId !== this.host) throw new GameError('Boty dodaje gospodarz.');
+        if (this.state.players.length >= MAX_PLAYERS) throw new GameError('W grze jest już komplet graczy.');
+        const taken = new Set(this.state.players.map((p) => p.name));
+        const name = BOT_NAMES.find((n) => !taken.has(n)) ?? `Robo-${this.state.players.length + 1}`;
+        this.state = addPlayer(this.state, newId(), name, true);
+        this.broadcast();
+        return;
+      }
+      case 'removeBot': {
+        if (playerId !== this.host) throw new GameError('Boty usuwa gospodarz.');
+        if (!this.state.players.find((p) => p.id === msg.playerId)?.bot) throw new GameError('To nie jest bot.');
+        this.state = removePlayer(this.state, msg.playerId);
+        this.broadcast();
+        return;
+      }
       case 'start': {
         if (playerId !== this.host) throw new GameError('Grę rozpoczyna gospodarz.');
         this.state = startGame(this.state);
@@ -137,6 +167,48 @@ export class Room {
       client.send({ t: 'state', view: viewFor(this.state, playerId), host: this.host });
     }
     this.save();
+    this.runBots();
+  }
+
+  // Ruch, który powinien teraz wykonać któryś z botów (albo null).
+  private nextBotMove(): { playerId: string; action: Action; delay: number } | null {
+    const s = this.state;
+    const isBot = (id: string | null) => !!id && !!s.players.find((p) => p.id === id)?.bot;
+    const trade = s.trades.find((t) => isBot(t.to));
+    if (trade) {
+      return { playerId: trade.to, action: { type: 'respondTrade', tradeId: trade.id, accept: botTradeResponse(s, trade) }, delay: BOT_DELAY_MS.trade };
+    }
+    if (s.phase === 'auction') {
+      const bot = s.players.find((p) => p.bot && !s.bidders.includes(p.id));
+      return bot ? { playerId: bot.id, action: botAction(s, bot.id), delay: BOT_DELAY_MS.bid } : null;
+    }
+    if ((s.phase === 'setup' || s.phase === 'actions') && isBot(s.currentPlayer)) {
+      return { playerId: s.currentPlayer!, action: botAction(s, s.currentPlayer!), delay: BOT_DELAY_MS.action };
+    }
+    return null;
+  }
+
+  private runBots() {
+    if (this.botPending) return;
+    const first = this.nextBotMove();
+    if (!first) return;
+    this.botPending = true;
+    this.schedule(() => {
+      this.botPending = false;
+      // Stan mógł się zmienić w międzyczasie — liczymy ruch od nowa.
+      const move = this.nextBotMove();
+      if (!move) return;
+      try {
+        this.state = applyAction(this.state, move.playerId, move.action);
+      } catch (err) {
+        console.error('Bot wykonał niedozwolony ruch', move, err);
+        const fallback: Action | null =
+          this.state.phase === 'auction' ? { type: 'bid', amount: 0 } : this.state.phase === 'actions' ? { type: 'pass' } : null;
+        if (!fallback) return;
+        this.state = applyAction(this.state, move.playerId, fallback);
+      }
+      this.broadcast();
+    }, first.delay);
   }
 
   private save() {

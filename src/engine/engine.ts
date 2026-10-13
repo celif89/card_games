@@ -124,7 +124,7 @@ function log(s: GameState, text: string) {
   if (s.log.length > 200) s.log.splice(0, s.log.length - 200);
 }
 
-export function addPlayer(state: GameState, id: string, name: string): GameState {
+export function addPlayer(state: GameState, id: string, name: string, bot = false): GameState {
   if (state.phase !== 'lobby') fail('Gra już się rozpoczęła.');
   if (state.players.length >= MAX_PLAYERS) fail('W grze jest już komplet graczy.');
   if (state.players.some((p) => p.id === id)) fail('Ten gracz już jest w grze.');
@@ -142,6 +142,7 @@ export function addPlayer(state: GameState, id: string, name: string): GameState
     hired: false,
     contracts: [],
     connected: true,
+    bot,
   });
   return s;
 }
@@ -157,7 +158,7 @@ export function removePlayer(state: GameState, id: string): GameState {
 export function setConnected(state: GameState, id: string, connected: boolean): GameState {
   const s = structuredClone(state);
   const p = s.players.find((pl) => pl.id === id);
-  if (p) p.connected = connected;
+  if (p && !p.bot) p.connected = connected;
   return s;
 }
 

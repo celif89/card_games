@@ -32,7 +32,9 @@ export function App() {
     return () => clearTimeout(t);
   }, [error]);
 
-  const banner = STATUS_TEXT[status];
+  const isHost = !!view && state.host === view.me;
+  const banner =
+    status === 'offline' && isHost ? 'Brak internetu — nowi gracze nie mogą dołączyć (gra z botami działa dalej)' : STATUS_TEXT[status];
   return (
     <>
       {banner && <div className="offline">{banner}</div>}
@@ -184,19 +186,31 @@ function Lobby({ view, code, host }: { view: GameView; code: string; host: strin
         {view.players.map((p) => (
           <li key={p.id}>
             <span className="dot" style={{ background: p.color }} />
+            {p.bot && '🤖 '}
             {p.name}
             {p.id === host && <em> (gospodarz)</em>}
             {p.id === view.me && <em> (ty)</em>}
             {!p.connected && <em> — rozłączony</em>}
+            {p.bot && isHost && (
+              <button className="link remove" onClick={() => net.send({ t: 'removeBot', playerId: p.id })} aria-label={`Usuń ${p.name}`}>
+                ✕
+              </button>
+            )}
           </li>
         ))}
       </ul>
+      {isHost && n < MAX_PLAYERS && (
+        <button onClick={() => net.send({ t: 'addBot' })}>🤖 Dodaj bota</button>
+      )}
       {isHost ? (
         <>
           <button className="primary" disabled={n < MIN_PLAYERS} onClick={() => net.send({ t: 'start' })}>
             {n < MIN_PLAYERS ? `Czekamy na graczy (min. ${MIN_PLAYERS})` : 'Rozpocznij grę'}
           </button>
-          <p className="hint">Jesteś gospodarzem: gra działa w twojej przeglądarce. Nie zamykaj tej karty do końca gry.</p>
+          <p className="hint">
+            Jesteś gospodarzem: gra (i boty) działają w twojej przeglądarce. Nie zamykaj tej karty do końca gry. Chcesz potestować sam? Dodaj boty
+            i rozpocznij grę.
+          </p>
         </>
       ) : (
         <p>Czekamy, aż gospodarz rozpocznie grę…</p>

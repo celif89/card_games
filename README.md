@@ -14,6 +14,9 @@ w której prawie nic nie zależy od losu. Najpierw wersja przeglądarkowa
 2. Pozostali skanują telefonem kod QR z ekranu gospodarza albo otwierają wysłany link.
 3. Gospodarz klika „Rozpocznij grę”.
 
+Chcesz zagrać sam albo w mniejszym gronie? W poczekalni kliknij **🤖 Dodaj bota** (do 4 graczy łącznie).
+Boty grają w przeglądarce gospodarza, więc taka gra działa nawet bez internetu.
+
 Nic nie trzeba instalować. Gra działa w przeglądarce gospodarza, a pozostali łączą się z nim
 bezpośrednio (WebRTC), więc **gospodarz nie może zamknąć karty z grą** do końca rozgrywki.
 Odświeżenie strony, także u gospodarza, nie przerywa gry. Potrzebny jest internet.
@@ -37,7 +40,7 @@ Struktura:
   - `data.ts` — wszystkie stałe: mapa, budynki, zlecenia, wiadomości, pola akcji.
   - `engine.ts` — przebieg gry i akcje graczy.
   - `rules.ts` — obliczenia: czynsz, ceny, opcje budowy, punktacja.
-  - `bot.ts` — prosty bot (na razie do testów).
+  - `bot.ts` — boty: strategiczny (`botAction`) i losowy (`randomAction`, do testów odporności).
 - `src/net/` — pokój gry prowadzony przez gospodarza: gracze, tokeny powrotu, ukrywanie ofert w licytacji.
 - `src/client/` — interfejs w React oraz połączenia PeerJS (`net.ts`).
 

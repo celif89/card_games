@@ -72,4 +72,48 @@ describe('pokój gry', () => {
     expect(view.phase).toBe('setup');
     expect(view.players.find((p) => p.name === 'Tomek')?.connected).toBe(false);
   });
+
+  it('gospodarz dodaje i usuwa boty, gość nie może', () => {
+    const { room, host } = setup();
+    const guest = fakeClient();
+    room.handle(guest, { t: 'join', name: 'Tomek' });
+    room.handle(guest, { t: 'addBot' });
+    expect(last(guest, 'error')?.message).toContain('gospodarz');
+    room.handle(host, { t: 'addBot' });
+    const bot = last(host, 'state')!.view.players.find((p) => p.bot)!;
+    expect(bot.name).toBe('Robo-Basia');
+    room.handle(host, { t: 'removeBot', playerId: bot.id });
+    expect(last(host, 'state')!.view.players.some((p) => p.bot)).toBe(false);
+  });
+
+  it('człowiek i trzy boty rozgrywają całą grę', () => {
+    const queue: (() => void)[] = [];
+    const { room, hostToken } = Room.create('Ania', () => {}, (fn) => queue.push(fn));
+    const host = fakeClient();
+    room.handle(host, { t: 'resume', playerId: room.host, token: hostToken });
+    for (let i = 0; i < 3; i++) room.handle(host, { t: 'addBot' });
+    room.handle(host, { t: 'start' });
+
+    for (let steps = 0; steps < 2000; steps++) {
+      const view = last(host, 'state')!.view;
+      if (view.phase === 'gameOver') break;
+      if (queue.length) {
+        queue.shift()!();
+        continue;
+      }
+      // Kolej człowieka: prosta gra — działka startowa, oferta 0, pas.
+      if (view.phase === 'setup') {
+        const lot = view.lots.find((l) => !l.owner && l.auctionNo === null && l.terrain === 'Z')!;
+        room.handle(host, { t: 'action', action: { type: 'pickStartLot', lotId: lot.id } });
+      } else if (view.phase === 'auction') {
+        room.handle(host, { t: 'action', action: { type: 'bid', amount: 0 } });
+      } else {
+        room.handle(host, { t: 'action', action: { type: 'pass' } });
+      }
+    }
+    const view = last(host, 'state')!.view;
+    expect(view.phase).toBe('gameOver');
+    expect(view.scores).toHaveLength(4);
+    expect(host.inbox.some((m) => m.t === 'error')).toBe(false);
+  });
 });

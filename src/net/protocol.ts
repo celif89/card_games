@@ -6,6 +6,8 @@ export type ClientMessage =
   | { t: 'resume'; playerId: string; token: string }
   | { t: 'leave' }
   | { t: 'start' }
+  | { t: 'addBot' }
+  | { t: 'removeBot'; playerId: string }
   | { t: 'action'; action: Action };
 
 // Wiadomości od gospodarza pokoju do gracza.

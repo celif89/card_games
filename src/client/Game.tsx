@@ -67,7 +67,8 @@ export function Game({ view }: { view: GameView }) {
   let status: string;
   if (view.phase === 'setup') status = myTurn ? 'Wybierz działkę startową na planszy' : `${current?.name} wybiera działkę startową`;
   else if (view.phase === 'auction') status = 'Licytacja!';
-  else if (view.phase === 'actions') status = myTurn ? `Twoja tura — masz ${me.managersLeft} menedżerów` : `Tura: ${current?.name}`;
+  else if (view.phase === 'actions')
+    status = myTurn ? `Twoja tura — masz ${me.managersLeft} menedżerów` : `Tura: ${current?.bot ? '🤖 ' : ''}${current?.name}${current?.bot ? ' (myśli…)' : ''}`;
   else status = 'Koniec gry';
 
   return (
@@ -528,10 +529,13 @@ function Players({ view }: { view: GameView }) {
         return (
           <div key={pid} className={`player-row ${view.currentPlayer === pid ? 'active' : ''}`}>
             <span className="dot" style={{ background: p.color }} />
-            <strong>{p.name}</strong>
+            <strong>
+              {p.bot && '🤖 '}
+              {p.name}
+            </strong>
             {i === 0 && <span title="Pierwszy gracz"> 🥇</span>}
             {nextFirst?.id === pid && <span title="Zacznie następną rundę"> ⏭️</span>}
-            {!p.connected && <span title="Rozłączony"> 📵</span>}
+            {!p.connected && !p.bot && <span title="Rozłączony"> 📵</span>}
             <span className="player-stats">
               💰{p.money} 🪵{p.materials.wood} 🧱{p.materials.brick} 🔩{p.materials.steel} ⭐{p.prestige} · 🗺️{lots} · 👔{p.managersLeft}/{p.managers}
               {p.loans > 0 && ` · 🏦${p.loans}`}

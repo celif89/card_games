@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addPlayer, applyAction, createGame, startGame, viewFor } from './engine.ts';
-import { botAction } from './bot.ts';
+import { botAction, randomAction } from './bot.ts';
 import { getLot, getPlayer, marketQuote, rentOf, turnOrder } from './rules.ts';
 import type { GameState } from './types.ts';
 
@@ -137,23 +137,43 @@ describe('zasady pomocnicze', () => {
 });
 
 describe('symulacja', () => {
-  it.each([2, 3, 4])('boty rozgrywają pełną grę na %i graczy', (n) => {
-    for (let seed = 1; seed <= 20; seed++) {
-      const rng = seeded(seed * 97 + n);
-      let s = newGame(n, seed);
-      let steps = 0;
-      while (s.phase !== 'gameOver') {
-        const actor = s.phase === 'auction' ? s.players.find((p) => !s.bidders.includes(p.id))!.id : s.currentPlayer!;
-        s = applyAction(s, actor, botAction(s, actor, rng));
-        expect(++steps).toBeLessThan(500);
-      }
-      expect(s.round).toBe(8);
-      expect(s.scores).toHaveLength(n);
-      for (const p of s.players) {
-        expect(p.money).toBeGreaterThanOrEqual(0);
-        expect(Object.values(p.materials).every((v) => v >= 0)).toBe(true);
-      }
-      for (const price of Object.values(s.prices)) expect(price).toBeGreaterThanOrEqual(1);
+  function play(n: number, seed: number, pickBot: (i: number) => typeof botAction) {
+    const rng = seeded(seed * 97 + n);
+    let s = newGame(n, seed);
+    let steps = 0;
+    while (s.phase !== 'gameOver') {
+      const actor = s.phase === 'auction' ? s.players.find((p) => !s.bidders.includes(p.id))!.id : s.currentPlayer!;
+      const idx = s.players.findIndex((p) => p.id === actor);
+      s = applyAction(s, actor, pickBot(idx)(s, actor, rng));
+      expect(++steps).toBeLessThan(600);
     }
+    return s;
+  }
+
+  function checkSane(s: GameState, n: number) {
+    expect(s.round).toBe(8);
+    expect(s.scores).toHaveLength(n);
+    for (const p of s.players) {
+      expect(p.money).toBeGreaterThanOrEqual(0);
+      expect(Object.values(p.materials).every((v) => v >= 0)).toBe(true);
+    }
+    for (const price of Object.values(s.prices)) expect(price).toBeGreaterThanOrEqual(1);
+  }
+
+  it.each([2, 3, 4])('losowe boty rozgrywają pełną grę na %i graczy', (n) => {
+    for (let seed = 1; seed <= 20; seed++) checkSane(play(n, seed, () => randomAction), n);
+  });
+
+  it.each([2, 3, 4])('boty ze strategią rozgrywają pełną grę na %i graczy', (n) => {
+    for (let seed = 1; seed <= 10; seed++) checkSane(play(n, seed, () => botAction), n);
+  });
+
+  it('bot ze strategią wygrywa z losowym', () => {
+    let wins = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      const s = play(2, seed, (i) => (i === 0 ? botAction : randomAction));
+      if (s.scores![0].playerId === 'p0') wins++;
+    }
+    expect(wins).toBeGreaterThanOrEqual(16);
   });
 });
