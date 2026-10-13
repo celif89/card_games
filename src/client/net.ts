@@ -7,6 +7,7 @@ import type { ClientMessage, ServerMessage } from '../net/protocol.ts';
 import { Room, type Client, type RoomSnapshot } from '../net/room.ts';
 
 const SESSION_KEY = 'miasteczko-session';
+export const TUTORIAL_STEP_KEY = 'miasteczko-tutorial-step';
 const roomKey = (code: string) => `miasteczko-room-${code}`;
 const peerId = (code: string) => `miasteczko-sa-${code.toLowerCase()}`;
 const CODE_LETTERS = 'BCDFGHJKLMNPRSTWZ';
@@ -24,6 +25,8 @@ interface Session {
   playerId: string;
   token: string;
   isHost: boolean;
+  // Samouczek: gra tylko z botem, bez łączenia z innymi.
+  tutorial?: boolean;
 }
 
 export type Status = 'idle' | 'connecting' | 'online' | 'hostLost' | 'offline';
@@ -34,9 +37,10 @@ export interface NetState {
   host: string;
   code: string;
   error: string | null;
+  tutorial: boolean;
 }
 
-const storage = {
+export const storage = {
   get<T>(key: string): T | null {
     try {
       return JSON.parse(localStorage.getItem(key) ?? 'null');
@@ -57,7 +61,7 @@ const storage = {
 const randomCode = () => Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => CODE_LETTERS[b % CODE_LETTERS.length]).join('');
 
 class Net {
-  state: NetState = { status: 'idle', view: null, host: '', code: '', error: null };
+  state: NetState = { status: 'idle', view: null, host: '', code: '', error: null, tutorial: false };
   private listeners = new Set<() => void>();
   private peer: Peer | null = null;
   private conn: DataConnection | null = null;
@@ -104,13 +108,25 @@ class Net {
     this.startHost(code, room, { code, playerId: room.host, token: hostToken, isHost: true }, true);
   }
 
+  // Samouczek: gra z jednym botem, w całości w tej przeglądarce.
+  startTutorial(name: string) {
+    this.reset();
+    const code = 'SAMO'; // samogłoski nie występują w kodach prawdziwych pokoi
+    storage.set(TUTORIAL_STEP_KEY, null);
+    const { room, hostToken } = Room.create(name, (s) => storage.set(roomKey(code), s));
+    this.startHost(code, room, { code, playerId: room.host, token: hostToken, isHost: true, tutorial: true });
+    room.handle(this.localClient!, { t: 'addBot' });
+    room.handle(this.localClient!, { t: 'start' });
+  }
+
   private startHost(code: string, room: Room, session: Session, fresh = false) {
     this.room = room;
     storage.set(SESSION_KEY, session);
-    this.update({ status: 'connecting', code });
+    this.update({ status: session.tutorial ? 'online' : 'connecting', code, tutorial: !!session.tutorial });
 
     this.localClient = { send: (msg) => this.receive(msg), close: () => {} };
     room.handle(this.localClient, { t: 'resume', playerId: session.playerId, token: session.token });
+    if (session.tutorial) return;
 
     const peer = new Peer(peerId(code), peerOptions);
     this.peer = peer;
@@ -280,7 +296,7 @@ class Net {
     this.room = null;
     this.localClient = null;
     peer?.destroy();
-    this.update({ status: 'idle', view: null, host: '', code: '' });
+    this.update({ status: 'idle', view: null, host: '', code: '', tutorial: false });
   }
 }
 

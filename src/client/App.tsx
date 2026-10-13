@@ -43,7 +43,7 @@ export function App() {
           {error}
         </div>
       )}
-      {!view ? <Home busy={status === 'connecting'} /> : view.phase === 'lobby' ? <Lobby view={view} code={state.code} host={state.host} /> : <Game view={view} />}
+      {!view ? <Home busy={status === 'connecting'} /> : view.phase === 'lobby' ? <Lobby view={view} code={state.code} host={state.host} /> : <Game view={view} tutorial={state.tutorial} />}
     </>
   );
 }
@@ -124,6 +124,16 @@ function Home({ busy }: { busy: boolean }) {
           {join}
         </>
       )}
+      <div className="divider">pierwszy raz?</div>
+      <button
+        disabled={busy || !name.trim()}
+        onClick={() => {
+          remember();
+          net.startTutorial(name);
+        }}
+      >
+        🎓 Samouczek — gra z botem krok po kroku
+      </button>
       <button className="link" onClick={() => setRules(true)}>
         📖 Zasady gry
       </button>

@@ -33,6 +33,7 @@ import {
 import type { Action, GameView, Lot, Materials, Player, TradeBundle } from '../engine/types.ts';
 import { net } from './net.ts';
 import { RulesModal } from './Rules.tsx';
+import { Coach } from './Tutorial.tsx';
 
 type Act = (a: Action) => void;
 
@@ -56,7 +57,7 @@ function isStartLot(lot: Lot) {
   return !lot.owner && lot.auctionNo === null && ['Z', 'L', 'G'].includes(lot.terrain);
 }
 
-export function Game({ view }: { view: GameView }) {
+export function Game({ view, tutorial }: { view: GameView; tutorial: boolean }) {
   const act: Act = (action) => net.send({ t: 'action', action });
   const [selected, setSelected] = useState<string | null>(null);
   const [rules, setRules] = useState(false);
@@ -72,7 +73,8 @@ export function Game({ view }: { view: GameView }) {
   else status = 'Koniec gry';
 
   return (
-    <div className="game">
+    <div className={`game ${tutorial ? 'with-coach' : ''}`}>
+      {tutorial && <Coach view={view} />}
       <header className={`topbar ${myTurn ? 'my-turn' : ''}`}>
         <div>
           <strong>🏙️ Runda {Math.max(view.round, 1)}/{ROUNDS}</strong>
@@ -199,6 +201,8 @@ function Row(props: { y: number; view: GameView; selected: string | null; onSele
               className={`lot ${TERRAIN_CLASS[lot.terrain]} ${selected === lot.id ? 'selected' : ''} ${highlight ? 'pickable' : ''} ${view.auctionLot === lot.id ? 'auctioned' : ''}`}
               style={owner ? { boxShadow: `inset 0 0 0 4px ${owner.color}` } : undefined}
               onClick={() => onSelect(lot.id)}
+              data-mine={lot.owner === view.me || undefined}
+              data-forsale={lotPrice(view, lot) !== null || undefined}
               title={`${lot.id} · ${TERRAIN_INFO[lot.terrain].name}${owner ? ` · ${owner.name}` : ''}${b ? ` · ${b.name}` : ''}`}
             >
               <span className="lot-id">{lot.id}</span>
@@ -576,7 +580,7 @@ function Trades({ view, act }: { view: GameView; act: Act }) {
   );
 
   return (
-    <section className="panel">
+    <section className="panel trades-panel">
       <h3>Handel 🤝</h3>
       {incoming.map((t) => (
         <div key={t.id} className="trade incoming">

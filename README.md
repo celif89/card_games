@@ -10,6 +10,9 @@ w której prawie nic nie zależy od losu. Najpierw wersja przeglądarkowa
 
 ## Jak zagrać
 
+**Pierwszy raz?** Na ekranie startowym kliknij **🎓 Samouczek** — zagrasz z botem, a karta z podpowiedziami
+przeprowadzi cię przez pierwszą rundę krok po kroku.
+
 1. Jedna osoba (gospodarz) otwiera grę i klika „Załóż nową grę”.
 2. Pozostali skanują telefonem kod QR z ekranu gospodarza albo otwierają wysłany link.
 3. Gospodarz klika „Rozpocznij grę”.

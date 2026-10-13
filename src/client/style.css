@@ -654,3 +654,79 @@ select {
   text-decoration: none;
   color: var(--muted);
 }
+
+/* Samouczek */
+.coach {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  width: min(380px, calc(100% - 24px));
+  max-height: 46vh;
+  overflow-y: auto;
+  z-index: 30;
+  background: #fffaf0;
+  border: 2px solid var(--t-c);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-size: 0.95rem;
+}
+.coach h4 {
+  margin: 4px 0 6px;
+  font-size: 1.1rem;
+}
+.coach p,
+.coach ul {
+  margin: 6px 0;
+}
+.coach ul {
+  padding-left: 18px;
+}
+.coach-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+}
+.coach-task {
+  background: #e8f3ea;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-weight: 600;
+}
+.coach-buttons {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.coach-pill {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 30;
+  background: #fffaf0;
+  border: 2px solid var(--t-c);
+  border-radius: 99px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+.game.with-coach .layout {
+  padding-bottom: 48vh;
+}
+.coach-target {
+  outline: 3px solid #f3a712 !important;
+  outline-offset: 2px;
+  animation: coach-glow 1.4s ease-in-out infinite;
+}
+@keyframes coach-glow {
+  50% {
+    outline-color: rgba(243, 167, 18, 0.25);
+  }
+}
+@media (max-width: 600px) {
+  .coach {
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 14px 14px 0 0;
+    max-height: 42vh;
+  }
+}
