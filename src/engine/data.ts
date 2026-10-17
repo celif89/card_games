@@ -86,6 +86,18 @@ export const BUILDINGS: Record<Exclude<BuildingType, 'public'>, BuildingInfo> = 
 
 export const UPGRADE_COST: Cost = { brick: 2, steel: 1 };
 
+// Modernizacja budynku produkcyjnego (raz na budynek): +1 produkcji, +3 do wartości na koniec gry.
+export type ProductionType = 'sawmill' | 'brickworks' | 'steelworks';
+export const MODERNIZATION: Record<ProductionType, { cost: Cost; extraProduction: number; extraValue: number }> = {
+  sawmill: { cost: { money: 3, brick: 2 }, extraProduction: 1, extraValue: 3 },
+  brickworks: { cost: { money: 3, wood: 2 }, extraProduction: 1, extraValue: 3 },
+  steelworks: { cost: { money: 5, brick: 2, wood: 1 }, extraProduction: 1, extraValue: 3 },
+};
+export const isProduction = (t: BuildingType): t is ProductionType => t in MODERNIZATION;
+
+// Premia na koniec gry za największe osiedle (grupę stykających się bokami działek).
+export const DISTRICT_POINTS_PER_LOT = 1;
+
 export interface ContractInfo {
   name: string;
   icon: string;

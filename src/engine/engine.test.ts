@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { addPlayer, applyAction, createGame, setRounds, startGame, viewFor } from './engine.ts';
 import { botAction, randomAction } from './bot.ts';
-import { getLot, getPlayer, marketQuote, rentOf, turnOrder } from './rules.ts';
+import { districtPoints, getLot, getPlayer, largestDistrict, marketQuote, productionOf, rentOf, scoreFor, turnOrder } from './rules.ts';
 import type { GameState } from './types.ts';
 
 // Deterministyczny generator liczb losowych do testów.
@@ -128,6 +128,46 @@ describe('długość gry', () => {
       expect(s.secret.newsDeck.length).toBeGreaterThanOrEqual(rounds);
     }
     expect(() => setRounds(createGame(), 9)).toThrow();
+  });
+});
+
+describe('modernizacja i osiedla', () => {
+  it('modernizacja tartaku daje +1 drewna i +3 do wartości', () => {
+    let s = pickStartLots(newGame(), ['A2', 'D1']);
+    s = allBid(s, [0, 0]);
+    const me = getLot(s, 'A2')!.owner!;
+    getPlayer(s, me).materials = { wood: 0, brick: 5, steel: 0 };
+    getPlayer(s, me).money = 30;
+    if (s.currentPlayer !== me) s = applyAction(s, s.currentPlayer!, { type: 'takeFirstPlayer' });
+    s = applyAction(s, me, { type: 'build', lotId: 'A2', building: 'sawmill' });
+    expect(productionOf(s, getLot(s, 'A2')!)).toEqual({ wood: 2 });
+    if (s.currentPlayer !== me) s = applyAction(s, s.currentPlayer!, { type: 'loan' });
+    s = applyAction(s, me, { type: 'build', lotId: 'A2', building: 'modernize' });
+    expect(getLot(s, 'A2')!.building).toEqual({ type: 'sawmill', level: 2 });
+    expect(productionOf(s, getLot(s, 'A2')!)).toEqual({ wood: 3 });
+    expect(scoreFor(s, getPlayer(s, me)).buildings).toBe(6);
+    expect(s.log.at(-1)).toMatchObject({ player: me, lot: 'A2' });
+    expect(s.log.at(-1)!.text).toContain('Tartak II');
+  });
+
+  it('nie można zmodernizować dwa razy ani zmodernizować domu', () => {
+    let s = pickStartLots(newGame(), ['A2', 'D1']);
+    s = allBid(s, [0, 0]);
+    const me = s.currentPlayer!;
+    const lotId = getLot(s, 'A2')!.owner === me ? 'A2' : 'D1';
+    getLot(s, lotId)!.building = { type: lotId === 'A2' ? 'sawmill' : 'house', level: lotId === 'A2' ? 2 : undefined };
+    getPlayer(s, me).materials = { wood: 9, brick: 9, steel: 9 };
+    expect(() => applyAction(s, me, { type: 'build', lotId, building: 'modernize' })).toThrow();
+  });
+
+  it('osiedle to największa grupa działek stykających się bokami', () => {
+    const s = newGame();
+    for (const id of ['A1', 'A2', 'B2', 'D4']) getLot(s, id)!.owner = 'p0';
+    getLot(s, 'B1')!.owner = 'p1';
+    expect(largestDistrict(s, 'p0').sort()).toEqual(['A1', 'A2', 'B2']);
+    expect(districtPoints(s, 'p0')).toBe(3);
+    expect(districtPoints(s, 'p1')).toBe(0); // pojedyncza działka to jeszcze nie osiedle
+    expect(scoreFor(s, getPlayer(s, 'p0')).district).toBe(3);
   });
 });
 

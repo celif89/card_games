@@ -30,6 +30,7 @@ import {
   type NewsId,
 } from './data.ts';
 import {
+  buildingName,
   buildOptions,
   buildSpace,
   canPay,
@@ -121,8 +122,8 @@ export function createGame(rng: Rng = Math.random): GameState {
   };
 }
 
-function log(s: GameState, text: string) {
-  s.log.push({ round: s.round, text });
+function log(s: GameState, text: string, player?: string, lot?: string) {
+  s.log.push({ round: s.round, text, player, lot });
   if (s.log.length > 200) s.log.splice(0, s.log.length - 200);
 }
 
@@ -247,10 +248,10 @@ function resolveAuction(s: GameState) {
     const p = getPlayer(s, winner);
     p.money -= best;
     lot.owner = winner;
-    log(s, `Oferty: ${reveal}. Działkę ${lot.id} kupuje ${p.name} za ${best}.`);
+    log(s, `🔨 Oferty: ${reveal}. Działkę ${lot.id} wygrywa ${p.name} za ${best}.`, p.id, lot.id);
   } else {
     lot.auctionUnsold = true;
-    log(s, `Oferty: ${reveal}. Nikt nie licytował — działkę ${lot.id} można kupić za 6.`);
+    log(s, `🔨 Oferty: ${reveal}. Nikt nie licytował — działkę ${lot.id} można kupić za 6.`);
   }
   s.secret.bids = {};
   s.bidders = [];
@@ -272,7 +273,7 @@ function payForced(s: GameState, p: Player, amount: number, what: string) {
   const missing = amount - p.money;
   p.money = 0;
   p.prestige -= missing;
-  log(s, `${p.name} nie ma czym zapłacić (${what}) — traci ${missing} PP.`);
+  log(s, `${p.name} nie ma czym zapłacić (${what}) — traci ${missing} PP.`, p.id);
 }
 
 function useManager(s: GameState, p: Player, space: ActionSpaceId) {
@@ -301,7 +302,7 @@ function endRound(s: GameState) {
     p.money += income.money;
     for (const m of MATERIALS) p.materials[m] += income.materials[m];
     const parts = [`+${income.money} 💰`, ...MATERIALS.filter((m) => income.materials[m]).map((m) => `+${income.materials[m]} ${MATERIAL_INFO[m].icon}`)];
-    log(s, `${p.name}: dochód ${parts.join(', ')}.`);
+    log(s, `💵 ${p.name}: dochód ${parts.join(', ')}.`, p.id);
   }
   for (const p of s.players) {
     if (s.currentNews !== 'lowRates') payForced(s, p, p.loans, 'odsetki');
@@ -316,7 +317,7 @@ function endRound(s: GameState) {
       for (const p of s.players) {
         if (s.buildsThisRound[p.id] === best) {
           p.prestige += 3;
-          log(s, `🏆 ${p.name} wygrywa konkurs architektoniczny (+3 PP).`);
+          log(s, `🏆 ${p.name} wygrywa konkurs architektoniczny (+3 PP).`, p.id);
         }
       }
     }
@@ -387,7 +388,7 @@ export function applyAction(state: GameState, playerId: string, action: Action):
       if (bundleEmpty(give) && bundleEmpty(get)) fail('Oferta jest pusta.');
       if (!hasBundle(p, give)) fail('Nie masz tego, co oferujesz.');
       s.trades.push({ id: s.nextTradeId++, from: p.id, to: other.id, give, get });
-      log(s, `🤝 ${p.name} składa ofertę wymiany graczowi ${other.name}.`);
+      log(s, `🤝 ${p.name} składa ofertę wymiany graczowi ${other.name}.`, p.id);
     } else {
       const t = s.trades.find((tr) => tr.id === action.tradeId) ?? fail('Ta oferta już nie istnieje.');
       if (action.type === 'cancelTrade') {
@@ -400,9 +401,9 @@ export function applyAction(state: GameState, playerId: string, action: Action):
           if (!hasBundle(p, t.get)) fail('Nie masz tego, o co prosi oferta.');
           transfer(from, p, t.give);
           transfer(p, from, t.get);
-          log(s, `🤝 ${p.name} i ${from.name} dobili targu.`);
+          log(s, `🤝 ${p.name} i ${from.name} dobili targu.`, p.id);
         } else {
-          log(s, `${p.name} odrzuca ofertę gracza ${getPlayer(s, t.from).name}.`);
+          log(s, `${p.name} odrzuca ofertę gracza ${getPlayer(s, t.from).name}.`, p.id);
         }
       }
       s.trades = s.trades.filter((tr) => tr.id !== t.id);
@@ -417,7 +418,7 @@ export function applyAction(state: GameState, playerId: string, action: Action):
     if (lot.owner || lot.auctionNo !== null || !['Z', 'L', 'G'].includes(lot.terrain))
       fail('Na start wybierz wolną działkę zwykłą, las albo gliniankę (nie licytowaną).');
     lot.owner = p.id;
-    log(s, `${p.name} wybiera działkę startową ${lot.id} (${TERRAIN_INFO[lot.terrain].name}).`);
+    log(s, `${p.name} wybiera działkę startową ${lot.id} (${TERRAIN_INFO[lot.terrain].name}).`, p.id, lot.id);
     s.setupQueue.shift();
     if (s.setupQueue.length) s.currentPlayer = s.setupQueue[0];
     else startRound(s);
@@ -441,7 +442,7 @@ export function applyAction(state: GameState, playerId: string, action: Action):
   switch (action.type) {
     case 'pass': {
       p.managersLeft = 0;
-      log(s, `${p.name} pasuje do końca rundy.`);
+      log(s, `${p.name} pasuje do końca rundy.`, p.id);
       break;
     }
     case 'buyLot': {
@@ -452,7 +453,7 @@ export function applyAction(state: GameState, playerId: string, action: Action):
       p.money -= price;
       lot.owner = p.id;
       useManager(s, p, 'buyLot');
-      log(s, `${p.name} kupuje działkę ${lot.id} za ${price}.`);
+      log(s, `${p.name} kupuje działkę ${lot.id} za ${price}.`, p.id, lot.id);
       break;
     }
     case 'build': {
@@ -468,19 +469,22 @@ export function applyAction(state: GameState, playerId: string, action: Action):
       s.buildsThisRound[p.id] = (s.buildsThisRound[p.id] ?? 0) + 1;
       if (action.building === 'upgrade') {
         lot.building = { type: 'tenement' };
-        log(s, `${p.name} rozbudowuje Dom na Kamienicę (${lot.id}).`);
+        log(s, `${p.name} rozbudowuje Dom na Kamienicę (${lot.id}).`, p.id, lot.id);
+      } else if (action.building === 'modernize') {
+        lot.building = { ...lot.building!, level: 2 };
+        log(s, `${p.name} modernizuje ${buildingName(lot.building)} (${lot.id}).`, p.id, lot.id);
       } else if (action.building === 'public') {
         const c = CONTRACTS[action.contractId!];
         lot.building = { type: 'public', contractId: action.contractId };
         p.contracts = p.contracts.filter((cid) => cid !== action.contractId);
         p.money += c.rewardMoney;
         p.prestige += c.rewardPrestige;
-        log(s, `${p.name} buduje ${c.name} (${lot.id}): +${c.rewardMoney} 💰, +${c.rewardPrestige} PP.`);
+        log(s, `${p.name} buduje ${c.name} (${lot.id}): +${c.rewardMoney} 💰, +${c.rewardPrestige} PP.`, p.id, lot.id);
       } else {
         const info = BUILDINGS[action.building];
         lot.building = { type: action.building };
         p.prestige += info.prestige ?? 0;
-        log(s, `${p.name} buduje ${info.name} (${lot.id}).`);
+        log(s, `${p.name} buduje ${info.name} (${lot.id}).`, p.id, lot.id);
       }
       break;
     }
@@ -505,7 +509,7 @@ export function applyAction(state: GameState, playerId: string, action: Action):
       s.prices = quote.prices;
       useManager(s, p, space);
       const what = MATERIALS.filter((m) => amounts[m]).map((m) => `${amounts[m]} ${MATERIAL_INFO[m].icon}`).join(', ');
-      log(s, `${p.name} ${space === 'sell' ? 'sprzedaje' : 'kupuje'} ${what} za ${quote.total}.`);
+      log(s, `${p.name} ${space === 'sell' ? 'sprzedaje' : 'kupuje'} ${what} za ${quote.total}.`, p.id);
       break;
     }
     case 'takeContract': {
@@ -518,14 +522,14 @@ export function applyAction(state: GameState, playerId: string, action: Action):
       s.contractDeckCount = s.secret.contractDeck.length;
       p.contracts.push(action.contractId);
       useManager(s, p, 'townhall');
-      log(s, `${p.name} bierze zlecenie: ${CONTRACTS[action.contractId].name}.`);
+      log(s, `${p.name} bierze zlecenie: ${CONTRACTS[action.contractId].name}.`, p.id);
       break;
     }
     case 'loan': {
       p.money += LOAN_AMOUNT;
       p.loans += 1;
       useManager(s, p, 'bank');
-      log(s, `${p.name} bierze pożyczkę ${LOAN_AMOUNT}.`);
+      log(s, `${p.name} bierze pożyczkę ${LOAN_AMOUNT}.`, p.id);
       break;
     }
     case 'repay': {
@@ -534,7 +538,7 @@ export function applyAction(state: GameState, playerId: string, action: Action):
       p.money -= LOAN_AMOUNT;
       p.loans -= 1;
       useManager(s, p, 'bank');
-      log(s, `${p.name} spłaca pożyczkę.`);
+      log(s, `${p.name} spłaca pożyczkę.`, p.id);
       break;
     }
     case 'hire': {
@@ -545,7 +549,7 @@ export function applyAction(state: GameState, playerId: string, action: Action):
       p.hired = true;
       p.managers += 1;
       useManager(s, p, 'hire');
-      log(s, `${p.name} zatrudnia 4. menedżera.`);
+      log(s, `${p.name} zatrudnia 4. menedżera.`, p.id);
       break;
     }
     case 'takeFirstPlayer': {
@@ -553,7 +557,7 @@ export function applyAction(state: GameState, playerId: string, action: Action):
       p.money += 1;
       s.nextFirstPlayer = s.players.indexOf(p);
       useManager(s, p, 'firstPlayer');
-      log(s, `${p.name} zacznie następną rundę jako pierwszy (+1 💰).`);
+      log(s, `${p.name} zacznie następną rundę jako pierwszy (+1 💰).`, p.id);
       break;
     }
     default:

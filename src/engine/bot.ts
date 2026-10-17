@@ -15,6 +15,8 @@ import {
 import {
   buildOptions,
   buildSpace,
+  buildingValue,
+  districtPoints,
   emptyMaterials,
   getPlayer,
   incomePreview,
@@ -54,13 +56,20 @@ function withBuilding(core: GameCore, lotId: string, owner: string, building: Bu
 // Opłacalność budowy: wartość końcowa + przyszłe dochody + prestiż/nagroda − koszt.
 function buildGain(core: GameCore, me: Player, lot: Lot, o: BuildOption): number {
   const building: Building =
-    o.building === 'upgrade' ? { type: 'tenement' } : o.building === 'public' ? { type: 'public', contractId: o.contractId } : { type: o.building };
+    o.building === 'upgrade'
+      ? { type: 'tenement' }
+      : o.building === 'modernize'
+        ? { ...lot.building!, level: 2 }
+        : o.building === 'public'
+          ? { type: 'public', contractId: o.contractId }
+          : { type: o.building };
   const built = withBuilding(core, lot.id, me.id, building);
   const before = incomeWorth(core, incomePreview(core, me.id));
   const after = incomeWorth(core, incomePreview(built, me.id));
   const r = roundsLeft(core);
   let value = (after - before) * r;
   if (o.building === 'upgrade') value += BUILDINGS.tenement.value - BUILDINGS.house.value;
+  else if (o.building === 'modernize') value += buildingValue({ ...lot, building }) - buildingValue(lot);
   else if (o.building === 'public') {
     const c = CONTRACTS[o.contractId!];
     value += c.rewardMoney + c.rewardPrestige + 3; // +3: unikamy kary za niezrealizowane zlecenie
@@ -107,7 +116,9 @@ export function botTradeResponse(core: GameCore, offer: { give: TradeBundle; get
 
 function lotScore(core: GameCore, me: Player, lot: Lot): number {
   const best = plans(core, { ...me, materials: { wood: 9, brick: 9, steel: 9 } }, [lot], 0)[0];
-  return (best?.gain ?? 0) + 2;
+  // Premia za powiększenie osiedla.
+  const districtGain = districtPoints(withBuilding(core, lot.id, me.id, lot.building), me.id) - districtPoints(core, me.id);
+  return (best?.gain ?? 0) + 2 + districtGain;
 }
 
 export function botAction(core: GameCore, playerId: string, rng: Rng = Math.random): Action {

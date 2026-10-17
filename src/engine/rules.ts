@@ -12,6 +12,9 @@ import {
   UNFINISHED_CONTRACT_PENALTY,
   UNSOLD_AUCTION_LOT_PRICE,
   UPGRADE_COST,
+  MODERNIZATION,
+  DISTRICT_POINTS_PER_LOT,
+  isProduction,
   type ActionSpaceId,
   type BuildingType,
   type Cost,
@@ -61,7 +64,10 @@ export function productionOf(core: GameCore, lot: Lot): Partial<Materials> {
   const b = lot.building;
   if (!b || b.type === 'public') return {};
   if (b.type === 'steelworks' && core.currentNews === 'strike') return {};
-  return BUILDINGS[b.type].produces ?? {};
+  const base = BUILDINGS[b.type].produces ?? {};
+  if (b.level !== 2 || !isProduction(b.type)) return base;
+  const extra = MODERNIZATION[b.type].extraProduction;
+  return Object.fromEntries(Object.entries(base).map(([m, n]) => [m, n + extra]));
 }
 
 // Cena zakupu działki akcją „Kup działkę”, albo null gdy nie jest na sprzedaż.
@@ -108,7 +114,7 @@ export function buildSpace(core: GameCore): { space: ActionSpaceId; extra: numbe
 }
 
 export interface BuildOption {
-  building: BuildingType | 'upgrade';
+  building: BuildingType | 'upgrade' | 'modernize';
   contractId?: string;
   label: string;
   icon: string;
@@ -129,6 +135,12 @@ export function buildOptions(core: GameCore, playerId: string, lotId: string, ex
     if (lot.building.type === 'house') {
       const cost = addMoney(UPGRADE_COST, extra);
       options.push({ building: 'upgrade', label: 'Rozbuduj na Kamienicę', icon: BUILDINGS.tenement.icon, cost, ...check(cost) });
+    }
+    const t = lot.building.type;
+    if (isProduction(t) && lot.building.level !== 2) {
+      const cost = addMoney(MODERNIZATION[t].cost, extra);
+      const info = BUILDINGS[t];
+      options.push({ building: 'modernize', label: `Modernizuj: ${info.name} II (+1 produkcji)`, icon: info.icon, cost, ...check(cost) });
     }
     return options;
   }
@@ -166,7 +178,49 @@ export function marketQuote(
 export function buildingValue(lot: Lot): number {
   const b = lot.building;
   if (!b || b.type === 'public') return 0;
-  return BUILDINGS[b.type].value;
+  const extra = b.level === 2 && isProduction(b.type) ? MODERNIZATION[b.type].extraValue : 0;
+  return BUILDINGS[b.type].value + extra;
+}
+
+export function buildingName(b: { type: BuildingType; contractId?: string; level?: number }): string {
+  if (b.type === 'public') return CONTRACTS[b.contractId!].name;
+  return BUILDINGS[b.type].name + (b.level === 2 ? ' II' : '');
+}
+
+// Największa grupa działek gracza stykających się bokami.
+export function largestDistrict(core: GameCore, playerId: string): string[] {
+  const owned = new Set(core.lots.filter((l) => l.owner === playerId).map((l) => l.id));
+  let best: string[] = [];
+  const seen = new Set<string>();
+  for (const id of owned) {
+    if (seen.has(id)) continue;
+    const group: string[] = [];
+    const stack = [id];
+    seen.add(id);
+    while (stack.length) {
+      const cur = getLot(core, stack.pop()!)!;
+      group.push(cur.id);
+      for (const n of neighbors(core, cur)) {
+        if (owned.has(n.id) && !seen.has(n.id)) {
+          seen.add(n.id);
+          stack.push(n.id);
+        }
+      }
+    }
+    if (group.length > best.length) best = group;
+  }
+  return best;
+}
+
+// O ile wzrośnie premia za osiedle, gdy gracz zdobędzie tę działkę.
+export function districtGainIfOwned(core: GameCore, playerId: string, lotId: string): number {
+  const after = { ...core, lots: core.lots.map((l) => (l.id === lotId ? { ...l, owner: playerId } : l)) };
+  return districtPoints(after, playerId) - districtPoints(core, playerId);
+}
+
+export function districtPoints(core: GameCore, playerId: string): number {
+  const size = largestDistrict(core, playerId).length;
+  return size >= 2 ? size * DISTRICT_POINTS_PER_LOT : 0;
 }
 
 export function scoreFor(core: GameCore, player: Player): ScoreLine {
@@ -177,6 +231,7 @@ export function scoreFor(core: GameCore, player: Player): ScoreLine {
   const materials = Math.floor(matCount / 2);
   const loans = -player.loans * LOAN_PENALTY;
   const contracts = -player.contracts.length * UNFINISHED_CONTRACT_PENALTY;
+  const district = districtPoints(core, player.id);
   return {
     playerId: player.id,
     money: player.money,
@@ -186,7 +241,8 @@ export function scoreFor(core: GameCore, player: Player): ScoreLine {
     materials,
     loans,
     contracts,
-    total: player.money + buildings + emptyLots + player.prestige + materials + loans + contracts,
+    district,
+    total: player.money + buildings + emptyLots + player.prestige + materials + loans + contracts + district,
   };
 }
 

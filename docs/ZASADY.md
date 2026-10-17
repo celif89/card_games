@@ -82,6 +82,15 @@ są zwykłymi działkami):
 **Rozbudowa:** Dom można przebudować na Kamienicę za 2 cegły + 1 stal
 (akcja Buduj).
 
+**Modernizacja** (akcja Buduj, raz na budynek): budynek produkcyjny daje
+**+1 sztukę** materiału co rundę i jest wart **+3** na koniec gry.
+
+| Modernizacja  | Koszt                         | Po modernizacji |
+|---------------|-------------------------------|-----------------|
+| Tartak II     | 3 monety + 2 cegły            | +3 drewna       |
+| Cegielnia II  | 3 monety + 2 drewna           | +3 cegły        |
+| Huta II       | 5 monet + 2 cegły + 1 drewno  | +2 stali        |
+
 **Urbanistyka** (dotyczy budynków wszystkich graczy):
 - Dom/Kamienica obok **Parku**: czynsz +1.
 - Dom/Kamienica obok **budynku publicznego** (ze Zlecenia): czynsz +1.
@@ -183,8 +192,12 @@ albo odrzuca.
 Po ostatniej rundzie:
 
 **Wynik = gotówka + wartość budynków + 2 za każdą pustą działkę + prestiż
-+ 1 za każde 2 materiały (w dół) − 12 za każdą niespłaconą pożyczkę
-− 3 za każde niezrealizowane Zlecenie**
++ 1 za każde 2 materiały (w dół) + premia za osiedle − 12 za każdą
+niespłaconą pożyczkę − 3 za każde niezrealizowane Zlecenie**
+
+**Premia za osiedle:** +1 pkt za każdą działkę w twojej największej grupie
+działek stykających się bokami (co najmniej 2 działki). Działka kupiona obok
+twojej powiększa osiedle — a działka kupiona przez rywala może je przeciąć.
 
 Remis: wygrywa gracz z większą gotówką.
 
@@ -193,4 +206,5 @@ Remis: wygrywa gracz z większą gotówką.
 - Czy Dom (zwrot w ok. 5 rund) nie jest zbyt słaby w porównaniu z produkcją
   materiałów na sprzedaż.
 - Czy kara za hałas nie jest zbyt złośliwa w grze rodzinnej.
+- Nadmiar materiałów: w symulacjach gracze kończą z dużymi zapasami, których nie da się sprzedać.
 - Czy 4 Zlecenia na stole przy 4 graczach wystarczą.

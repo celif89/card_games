@@ -100,7 +100,12 @@ const STEPS: Step[] = [
     title: 'Zbuduj pierwszy budynek',
     target: '.lot[data-mine]',
     task: 'Gdy przyjdzie twoja tura, kliknij swoją działkę (z obwódką w twoim kolorze) i wybierz budynek, np. Dom.',
-    body: <p>Dom kosztuje 2 🪵 + 1 🧱 i co rundę przynosi 2 💰 czynszu. Tartak i cegielnia produkują materiały.</p>,
+    body: (
+      <p>
+        Dom kosztuje 2 🪵 + 1 🧱 i co rundę przynosi 2 💰 czynszu. Tartak i cegielnia produkują materiały — później możesz je{' '}
+        <b>zmodernizować</b> (+1 produkcji).
+      </p>
+    ),
     done: (v) => myLots(v).some((l) => l.building),
   },
   {
@@ -143,6 +148,10 @@ const STEPS: Step[] = [
         <li>Dom lub Kamienica obok 🌳 Parku albo budynku publicznego: czynsz <b>+1</b>.</li>
         <li>Mieszkanie w centrum: czynsz <b>+1</b>.</li>
         <li>Mieszkanie obok 🧱 Cegielni albo 🏭 Huty (hałas): czynsz <b>−1</b>.</li>
+        <li>
+          🏘️ <b>Osiedle</b>: na koniec gry +1 pkt za każdą działkę w twojej największej grupie stykających się działek. Kupuj działki obok
+          siebie!
+        </li>
       </ul>
     ),
   },
@@ -183,7 +192,12 @@ const STEPS: Step[] = [
   {
     title: 'Dochód przyszedł!',
     target: '.log',
-    body: <p>W dzienniku widzisz, co kto zarobił i zrobił. Tu sprawdzisz też ruchy bota.</p>,
+    body: (
+      <p>
+        W dzienniku widzisz, co kto zarobił i zrobił — każdy wpis ma pasek w kolorze gracza. Ostatnie ruchy są też na górze ekranu, a działka,
+        na której ktoś właśnie coś zrobił, błyska na planszy.
+      </p>
+    ),
   },
   {
     title: 'Handel',

@@ -5,6 +5,8 @@ export type Materials = Record<Material, number>;
 export interface Building {
   type: BuildingType;
   contractId?: string;
+  // 2 = zmodernizowany budynek produkcyjny.
+  level?: number;
 }
 
 export interface Lot {
@@ -60,6 +62,7 @@ export interface ScoreLine {
   materials: number;
   loans: number;
   contracts: number;
+  district: number;
   total: number;
 }
 
@@ -68,6 +71,9 @@ export type Phase = 'lobby' | 'setup' | 'auction' | 'actions' | 'gameOver';
 export interface LogEntry {
   round: number;
   text: string;
+  // Kto wykonał ruch i której działki dotyczył (do podświetlania).
+  player?: string;
+  lot?: string;
 }
 
 // Wszystko, co widzą wszyscy gracze.
@@ -120,7 +126,7 @@ export type Action =
   | { type: 'pickStartLot'; lotId: string }
   | { type: 'bid'; amount: number }
   | { type: 'buyLot'; lotId: string }
-  | { type: 'build'; lotId: string; building: BuildingType | 'upgrade'; contractId?: string }
+  | { type: 'build'; lotId: string; building: BuildingType | 'upgrade' | 'modernize'; contractId?: string }
   | { type: 'sell'; amounts: Partial<Materials> }
   | { type: 'buy'; amounts: Partial<Materials> }
   | { type: 'takeContract'; contractId: string }

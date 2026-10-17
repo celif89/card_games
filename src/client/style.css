@@ -102,7 +102,9 @@ select {
   max-width: calc(100% - 32px);
 }
 .offline {
-  top: 8px;
+  top: 76px;
+  font-size: 0.85rem;
+  opacity: 0.92;
   background: #333;
   color: #fff;
 }
@@ -729,4 +731,78 @@ select {
     border-radius: 14px 14px 0 0;
     max-height: 42vh;
   }
+}
+
+/* Czytelność ruchów */
+.lot-level {
+  position: absolute;
+  bottom: 2px;
+  left: 3px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 4px;
+  padding: 0 3px;
+}
+.lot-flash {
+  position: absolute;
+  inset: -3px;
+  border-radius: 8px;
+  border: 3px dashed var(--flash);
+  pointer-events: none;
+  animation: lot-flash 1.2s ease-out 2;
+}
+@keyframes lot-flash {
+  0% {
+    background: color-mix(in srgb, var(--flash) 55%, transparent);
+    transform: scale(1.08);
+  }
+  100% {
+    background: transparent;
+    transform: scale(1);
+  }
+}
+.recent ul,
+.log ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.recent li {
+  border-left: 4px solid var(--line);
+  padding: 3px 8px;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.recent li.newest {
+  font-size: 1rem;
+  color: var(--ink);
+  font-weight: 600;
+  background: #fff;
+  border-radius: 0 6px 6px 0;
+  animation: newest-in 0.5s ease-out;
+}
+@keyframes newest-in {
+  from {
+    background: #fff3c4;
+  }
+}
+.log li.log-player {
+  border-left: 4px solid;
+  padding-left: 6px;
+}
+.log li.log-system {
+  color: var(--muted);
+  padding-left: 10px;
+}
+.log li.log-round {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-bottom: none;
+  padding-top: 8px;
 }

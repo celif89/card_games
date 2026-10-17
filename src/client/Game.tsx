@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import {
   ACTION_SPACES,
   BUILDINGS,
@@ -17,6 +17,9 @@ import {
 import {
   buildOptions,
   buildSpace,
+  buildingName,
+  districtGainIfOwned,
+  districtPoints,
   emptyMaterials,
   formatCost,
   getLot,
@@ -49,7 +52,20 @@ function buildingLabel(lot: Lot): { icon: string; name: string } | null {
     const c = CONTRACTS[b.contractId!];
     return { icon: c.icon, name: c.name };
   }
-  return { icon: BUILDINGS[b.type].icon, name: BUILDINGS[b.type].name };
+  return { icon: BUILDINGS[b.type].icon, name: buildingName(b) };
+}
+
+// Ostatni ruch dotyczący działki — do podświetlenia na planszy.
+function lastLotMove(view: GameView): { lot: string; color: string; index: number } | null {
+  for (let i = view.log.length - 1; i >= 0; i--) {
+    const e = view.log[i];
+    if (e.round !== view.round) return null;
+    if (e.lot && e.player) {
+      const p = playerOf(view, e.player);
+      return p ? { lot: e.lot, color: p.color, index: i } : null;
+    }
+  }
+  return null;
 }
 
 function isStartLot(lot: Lot) {
@@ -96,6 +112,7 @@ export function Game({ view, tutorial }: { view: GameView; tutorial: boolean }) 
 
       <div className="layout">
         <div className="col-main">
+          <RecentMoves view={view} />
           <News view={view} />
           <Board view={view} selected={selected} onSelect={setSelected} />
           {selected && <LotPanel view={view} lotId={selected} act={act} onClose={() => setSelected(null)} />}
@@ -181,6 +198,7 @@ function Board({ view, selected, onSelect }: { view: GameView; selected: string 
 
 function Row(props: { y: number; view: GameView; selected: string | null; onSelect: (id: string) => void; pickable: boolean }) {
   const { y, view, selected, onSelect, pickable } = props;
+  const last = lastLotMove(view);
   return (
     <>
       <span className="axis">{y + 1}</span>
@@ -208,7 +226,11 @@ function Row(props: { y: number; view: GameView; selected: string | null; onSele
               {upcomingAuction && <span className="lot-auction">🔨{lot.auctionNo}</span>}
               {lot.auctionUnsold && !lot.owner && <span className="lot-auction">6💰</span>}
               {b && <span className="lot-building">{b.icon}</span>}
+              {lot.building?.level === 2 && <span className="lot-level">II</span>}
               {yieldText && <span className="lot-yield">{yieldText}</span>}
+              {last?.lot === lot.id && (
+                <span key={last.index} className="lot-flash" style={{ '--flash': last.color } as React.CSSProperties} title="Ostatni ruch" />
+              )}
             </button>
           );
         })}
@@ -269,6 +291,9 @@ function LotPanel({ view, lotId, act, onClose }: { view: GameView; lotId: string
         >
           Kup działkę za {price} 💰 {!spaceFree(view, 'buyLot') && '(pole zajęte)'}
         </button>
+      )}
+      {!lot.owner && (price !== null || lot.auctionNo !== null) && view.phase !== 'gameOver' && (
+        <DistrictHint gain={districtGainIfOwned(view, me, lot.id)} />
       )}
 
       {lot.owner === me && options.length > 0 && (
@@ -487,6 +512,9 @@ function MyPanel({ view }: { view: GameView }) {
       <div className="small">
         Menedżerowie: {me.managersLeft}/{me.managers} · Pożyczki: {me.loans} · Dochód na koniec rundy: {incomeParts.join(', ')}
       </div>
+      <div className="small">
+        🏘️ Osiedle (największa grupa stykających się działek): {districtPoints(view, me.id) ? `${districtPoints(view, me.id)} działek → +${districtPoints(view, me.id)} pkt na koniec` : 'jeszcze brak — kup działkę obok swojej'}
+      </div>
       {me.contracts.length > 0 && (
         <div className="contracts mine">
           {me.contracts.map((id) => (
@@ -540,7 +568,7 @@ function Players({ view }: { view: GameView }) {
             {nextFirst?.id === pid && <span title="Zacznie następną rundę"> ⏭️</span>}
             {!p.connected && !p.bot && <span title="Rozłączony"> 📵</span>}
             <span className="player-stats">
-              💰{p.money} 🪵{p.materials.wood} 🧱{p.materials.brick} 🔩{p.materials.steel} ⭐{p.prestige} · 🗺️{lots} · 👔{p.managersLeft}/{p.managers}
+              💰{p.money} 🪵{p.materials.wood} 🧱{p.materials.brick} 🔩{p.materials.steel} ⭐{p.prestige} · 🗺️{lots} 🏘️{districtPoints(view, pid)} · 👔{p.managersLeft}/{p.managers}
               {p.loans > 0 && ` · 🏦${p.loans}`}
               {p.contracts.length > 0 && ` · 📜${p.contracts.length}`}
             </span>
@@ -684,6 +712,7 @@ function Scores({ view }: { view: GameView }) {
             <th>Materiały</th>
             <th>Pożyczki</th>
             <th>Zlecenia</th>
+            <th>Osiedle</th>
             <th>Razem</th>
           </tr>
         </thead>
@@ -702,6 +731,7 @@ function Scores({ view }: { view: GameView }) {
                 <td>{r.materials}</td>
                 <td>{r.loans}</td>
                 <td>{r.contracts}</td>
+                <td>{r.district}</td>
                 <td>
                   <strong>{r.total}</strong>
                 </td>
@@ -715,17 +745,59 @@ function Scores({ view }: { view: GameView }) {
 }
 
 function Log({ view }: { view: GameView }) {
-  const entries = useMemo(() => [...view.log].reverse().slice(0, 40), [view.log]);
+  const entries = useMemo(() => [...view.log].reverse().slice(0, 60), [view.log]);
   return (
     <section className="panel log">
       <h3>Dziennik</h3>
       <ul>
-        {entries.map((e, i) => (
-          <li key={i}>
-            <small>R{e.round}</small> {e.text}
-          </li>
-        ))}
+        {entries.map((e, i) => {
+          const p = playerOf(view, e.player);
+          const header = i === 0 || entries[i - 1].round !== e.round;
+          return (
+            <Fragment key={view.log.length - i}>
+              {header && <li className="log-round">Runda {Math.max(e.round, 1)}</li>}
+              <li className={p ? 'log-player' : 'log-system'} style={p ? { borderLeftColor: p.color } : undefined}>
+                {e.text}
+              </li>
+            </Fragment>
+          );
+        })}
       </ul>
     </section>
   );
+}
+
+// Pasek z ostatnimi ruchami graczy — żeby było jasne, kto co zrobił.
+function RecentMoves({ view }: { view: GameView }) {
+  const moves = useMemo(
+    () =>
+      view.log
+        .map((e, i) => ({ ...e, i }))
+        .filter((e) => e.player && !e.text.startsWith('💵'))
+        .slice(-4)
+        .reverse(),
+    [view.log],
+  );
+  if (!moves.length || view.phase === 'gameOver') return null;
+  return (
+    <section className="panel recent">
+      <h3>Ostatnie ruchy</h3>
+      <ul>
+        {moves.map((e, k) => {
+          const p = playerOf(view, e.player)!;
+          return (
+            <li key={e.i} className={k === 0 ? 'newest' : ''} style={{ borderLeftColor: p.color }}>
+              <span className="dot" style={{ background: p.color }} /> {p.bot && '🤖 '}
+              {e.text}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function DistrictHint({ gain }: { gain: number }) {
+  if (gain <= 0) return null;
+  return <p className="hint">🏘️ Ta działka powiększy twoje osiedle: +{gain} pkt na koniec gry.</p>;
 }
