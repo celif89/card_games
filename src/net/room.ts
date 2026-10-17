@@ -1,5 +1,5 @@
 // Pokój gry prowadzony przez gospodarza (w jego przeglądarce). Niezależny od sposobu przesyłania wiadomości.
-import { GameError, addPlayer, applyAction, createGame, removePlayer, setConnected, startGame, viewFor } from '../engine/engine.ts';
+import { GameError, addPlayer, applyAction, createGame, removePlayer, setConnected, setRounds, startGame, viewFor } from '../engine/engine.ts';
 import { botAction, botTradeResponse } from '../engine/bot.ts';
 import { MAX_PLAYERS } from '../engine/data.ts';
 import type { Action, GameState } from '../engine/types.ts';
@@ -130,6 +130,12 @@ export class Room {
         if (playerId !== this.host) throw new GameError('Boty usuwa gospodarz.');
         if (!this.state.players.find((p) => p.id === msg.playerId)?.bot) throw new GameError('To nie jest bot.');
         this.state = removePlayer(this.state, msg.playerId);
+        this.broadcast();
+        return;
+      }
+      case 'setRounds': {
+        if (playerId !== this.host) throw new GameError('Długość gry ustawia gospodarz.');
+        this.state = setRounds(this.state, msg.rounds);
         this.broadcast();
         return;
       }

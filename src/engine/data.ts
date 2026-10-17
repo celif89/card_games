@@ -17,7 +17,9 @@ export type BuildingType =
 
 export type Cost = { money?: number } & Partial<Record<Material, number>>;
 
-export const ROUNDS = 8;
+// Długość gry do wyboru w poczekalni; domyślnie zależy od liczby graczy.
+export const ROUND_OPTIONS = [8, 10, 12, 14];
+export const defaultRounds = (players: number) => (players <= 2 ? 14 : players === 3 ? 12 : 10);
 export const START_MONEY = 15;
 export const START_MATERIALS: Record<Material, number> = { wood: 2, brick: 1, steel: 0 };
 export const START_MANAGERS = 3;
@@ -56,8 +58,8 @@ export const MAP: string[] = [
   'GZZZLL',
 ];
 
-// Działki licytowane, w kolejności rund.
-export const AUCTION_ORDER: string[] = ['C3', 'F4', 'D3', 'A5', 'C4', 'B1', 'D4', 'F5'];
+// Działki licytowane, w kolejności rund (w grze licytuje się tyle pierwszych, ile jest rund).
+export const AUCTION_ORDER: string[] = ['C3', 'F4', 'D3', 'A5', 'C4', 'B1', 'D4', 'F5', 'E4', 'F3', 'B3', 'E6', 'C2', 'D5'];
 
 export interface BuildingInfo {
   name: string;
@@ -119,7 +121,12 @@ export type NewsId =
   | 'busLine'
   | 'propertyTax'
   | 'archContest'
-  | 'openDay';
+  | 'openDay'
+  | 'roadworks'
+  | 'highDemand'
+  | 'brickGlut'
+  | 'festival'
+  | 'quiet';
 
 export const NEWS: Record<NewsId, { name: string; text: string }> = {
   boom: { name: 'Boom budowlany', text: 'Cena cegły rośnie o 2.' },
@@ -132,6 +139,11 @@ export const NEWS: Record<NewsId, { name: string; text: string }> = {
   propertyTax: { name: 'Podatek od nieruchomości', text: 'Na koniec rundy płacisz 1 monetę za każde pełne 3 budynki.' },
   archContest: { name: 'Konkurs architektoniczny', text: 'Kto w tej rundzie postawi najwięcej budynków, dostaje 3 PP (remis: wszyscy).' },
   openDay: { name: 'Dzień otwarty', text: 'Każdy Park daje właścicielowi 2 monety.' },
+  roadworks: { name: 'Remont drogi', text: 'Wszystkie działki kosztują w tej rundzie o 1 więcej.' },
+  highDemand: { name: 'Rekordowe zamówienia', text: 'Ceny wszystkich materiałów rosną o 1.' },
+  brickGlut: { name: 'Nadwyżka cegły', text: 'Cena cegły spada o 2.' },
+  festival: { name: 'Festyn miejski', text: 'Każdy budynek publiczny daje właścicielowi 2 monety.' },
+  quiet: { name: 'Spokojny kwartał', text: 'Nic szczególnego się nie dzieje.' },
 };
 
 export type ActionSpaceId = 'buyLot' | 'build' | 'build2' | 'sell' | 'buy' | 'townhall' | 'bank' | 'hire' | 'firstPlayer';

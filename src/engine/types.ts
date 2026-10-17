@@ -74,6 +74,9 @@ export interface LogEntry {
 export interface GameCore {
   phase: Phase;
   round: number;
+  rounds: number;
+  // Długość gry wybrana w poczekalni (null = domyślna dla liczby graczy).
+  roundsSetting: number | null;
   players: Player[];
   firstPlayer: number;
   nextFirstPlayer: number | null;

@@ -21,7 +21,7 @@ const STEPS: Step[] = [
     title: 'Witaj w Miasteczku S.A.!',
     body: (
       <>
-        <p>Prowadzisz firmę deweloperską. Przez <b>8 rund</b> kupujesz działki, produkujesz materiały i stawiasz budynki.</p>
+        <p>Prowadzisz firmę deweloperską. Przez <b>kilkanaście rund</b> (w samouczku 10) kupujesz działki, produkujesz materiały i stawiasz budynki.</p>
         <p>
           Wygrywa ten, kto na końcu ma największy majątek: <b>gotówka + wartość budynków + prestiż</b>. Grasz z botem Robo-Basią.
         </p>
@@ -199,7 +199,7 @@ const STEPS: Step[] = [
     title: 'Dalej już sam!',
     body: (
       <>
-        <p>Znasz już wszystkie zasady. Dokończ grę z Robo-Basią — po 8 rundach zobaczysz tabelę wyników.</p>
+        <p>Znasz już wszystkie zasady. Dokończ grę z Robo-Basią — po ostatniej rundzie zobaczysz tabelę wyników.</p>
         <p>
           Pełne zasady są zawsze pod <b>📖 Zasady</b> na górze ekranu. Powodzenia!
         </p>

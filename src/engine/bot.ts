@@ -9,7 +9,6 @@ import {
   MATERIALS,
   MATERIAL_INFO,
   MAX_CONTRACTS_IN_HAND,
-  ROUNDS,
   type Cost,
   type Material,
 } from './data.ts';
@@ -32,7 +31,7 @@ const pick = <T>(items: T[], rng: Rng): T => items[Math.floor(rng() * items.leng
 
 // Ile rund dochodu jeszcze zostało (bieżąca runda też płaci na koniec).
 function roundsLeft(core: GameCore): number {
-  return Math.max(0, ROUNDS - core.round + 1);
+  return Math.max(0, core.rounds - core.round + 1);
 }
 
 // Wartość materiału dla bota: trochę poniżej ceny bazowej (sprzedaż obniża cenę).

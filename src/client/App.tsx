@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import qrcode from 'qrcode-generator';
-import { MAX_PLAYERS, MIN_PLAYERS } from '../engine/data.ts';
+import { MAX_PLAYERS, MIN_PLAYERS, ROUND_OPTIONS, defaultRounds } from '../engine/data.ts';
 import type { GameView } from '../engine/types.ts';
 import { inviteLink, net, useNet, type Status } from './net.ts';
 import { Game } from './Game.tsx';
@@ -212,6 +212,7 @@ function Lobby({ view, code, host }: { view: GameView; code: string; host: strin
       {isHost && n < MAX_PLAYERS && (
         <button onClick={() => net.send({ t: 'addBot' })}>🤖 Dodaj bota</button>
       )}
+      <RoundsPicker view={view} isHost={isHost} />
       {isHost ? (
         <>
           <button className="primary" disabled={n < MIN_PLAYERS} onClick={() => net.send({ t: 'start' })}>
@@ -228,6 +229,34 @@ function Lobby({ view, code, host }: { view: GameView; code: string; host: strin
       <button className="link" onClick={() => net.leave()}>
         {isHost ? 'Zamknij pokój' : 'Opuść pokój'}
       </button>
+    </div>
+  );
+}
+
+function RoundsPicker({ view, isHost }: { view: GameView; isHost: boolean }) {
+  const auto = defaultRounds(view.players.length);
+  const rounds = view.roundsSetting ?? auto;
+  return (
+    <div className="rounds-picker">
+      <h2>Długość gry</h2>
+      {isHost ? (
+        <div className="row">
+          {ROUND_OPTIONS.map((r) => (
+            <button
+              key={r}
+              className={r === rounds ? 'primary' : ''}
+              onClick={() => net.send({ t: 'setRounds', rounds: r === auto ? null : r })}
+            >
+              {r} rund{r === auto ? ' ★' : ''}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p>{rounds} rund</p>
+      )}
+      <p className="hint">
+        ★ zalecane dla {view.players.length} graczy. {view.roundsSetting === null && 'Zmieni się samo, gdy dołączy ktoś jeszcze.'}
+      </p>
     </div>
   );
 }

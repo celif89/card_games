@@ -116,6 +116,7 @@ class Net {
     const { room, hostToken } = Room.create(name, (s) => storage.set(roomKey(code), s));
     this.startHost(code, room, { code, playerId: room.host, token: hostToken, isHost: true, tutorial: true });
     room.handle(this.localClient!, { t: 'addBot' });
+    room.handle(this.localClient!, { t: 'setRounds', rounds: 10 });
     room.handle(this.localClient!, { t: 'start' });
   }
 

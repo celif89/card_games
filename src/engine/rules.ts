@@ -69,7 +69,8 @@ export function lotPrice(core: GameCore, lot: Lot): number | null {
   if (lot.owner) return null;
   if (lot.auctionNo !== null) return lot.auctionUnsold ? UNSOLD_AUCTION_LOT_PRICE : null;
   if (lot.terrain === 'Z' && core.currentNews === 'busLine') return 2;
-  return TERRAIN_INFO[lot.terrain].price;
+  const price = TERRAIN_INFO[lot.terrain].price;
+  return price !== null && core.currentNews === 'roadworks' ? price + 1 : price;
 }
 
 export function canPay(player: Player, cost: Cost): boolean {
@@ -197,6 +198,7 @@ export function incomePreview(core: GameCore, playerId: string): { money: number
     if (lot.owner !== playerId) continue;
     money += rentOf(core, lot);
     if (lot.building?.type === 'park' && core.currentNews === 'openDay') money += 2;
+    if (lot.building?.type === 'public' && core.currentNews === 'festival') money += 2;
     const prod = productionOf(core, lot);
     for (const m of MATERIALS) materials[m] += prod[m] ?? 0;
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addPlayer, applyAction, createGame, startGame, viewFor } from './engine.ts';
+import { addPlayer, applyAction, createGame, setRounds, startGame, viewFor } from './engine.ts';
 import { botAction, randomAction } from './bot.ts';
 import { getLot, getPlayer, marketQuote, rentOf, turnOrder } from './rules.ts';
 import type { GameState } from './types.ts';
@@ -111,6 +111,26 @@ describe('przebieg gry', () => {
   });
 });
 
+describe('długość gry', () => {
+  it('domyślnie 14 rund dla 2 graczy, 12 dla 3 i 10 dla 4', () => {
+    expect(newGame(2).rounds).toBe(14);
+    expect(newGame(3).rounds).toBe(12);
+    expect(newGame(4).rounds).toBe(10);
+  });
+
+  it('gospodarz może wybrać długość, a licytowanych działek jest tyle, ile rund', () => {
+    for (const rounds of [8, 14]) {
+      let s = createGame(seeded(3));
+      s = addPlayer(addPlayer(s, 'a', 'A'), 'b', 'B');
+      s = startGame(setRounds(s, rounds), seeded(3));
+      expect(s.rounds).toBe(rounds);
+      expect(s.lots.filter((l) => l.auctionNo !== null)).toHaveLength(rounds);
+      expect(s.secret.newsDeck.length).toBeGreaterThanOrEqual(rounds);
+    }
+    expect(() => setRounds(createGame(), 9)).toThrow();
+  });
+});
+
 describe('zasady pomocnicze', () => {
   it('rynek: każda sztuka zmienia cenę o 1', () => {
     expect(marketQuote({ wood: 3, brick: 4, steel: 6 }, { wood: 3 }, 'sell')).toEqual({
@@ -151,7 +171,7 @@ describe('symulacja', () => {
   }
 
   function checkSane(s: GameState, n: number) {
-    expect(s.round).toBe(8);
+    expect(s.round).toBe(s.rounds);
     expect(s.scores).toHaveLength(n);
     for (const p of s.players) {
       expect(p.money).toBeGreaterThanOrEqual(0);

@@ -18,7 +18,8 @@ import {
   PLAYER_COLORS,
   PRICE_MAX,
   PRICE_MIN,
-  ROUNDS,
+  ROUND_OPTIONS,
+  defaultRounds,
   START_MANAGERS,
   START_MATERIALS,
   START_MONEY,
@@ -69,7 +70,6 @@ function createLots(): Lot[] {
   MAP.forEach((row, y) =>
     [...row].forEach((terrain, x) => {
       const id = `${'ABCDEF'[x]}${y + 1}`;
-      const auctionIdx = AUCTION_ORDER.indexOf(id);
       lots.push({
         id,
         x,
@@ -77,7 +77,7 @@ function createLots(): Lot[] {
         terrain: terrain as Lot['terrain'],
         owner: null,
         building: null,
-        auctionNo: auctionIdx >= 0 ? auctionIdx + 1 : null,
+        auctionNo: null,
         auctionUnsold: false,
       });
     }),
@@ -91,6 +91,8 @@ export function createGame(rng: Rng = Math.random): GameState {
   return {
     phase: 'lobby',
     round: 0,
+    rounds: 0,
+    roundsSetting: null,
     players: [],
     firstPlayer: 0,
     nextFirstPlayer: null,
@@ -162,10 +164,18 @@ export function setConnected(state: GameState, id: string, connected: boolean): 
   return s;
 }
 
+export function setRounds(state: GameState, rounds: number | null): GameState {
+  if (state.phase !== 'lobby') fail('Długość gry ustawia się przed startem.');
+  if (rounds !== null && !ROUND_OPTIONS.includes(rounds)) fail('Nieprawidłowa liczba rund.');
+  return { ...state, roundsSetting: rounds };
+}
+
 export function startGame(state: GameState, rng: Rng = Math.random): GameState {
   if (state.phase !== 'lobby') fail('Gra już się rozpoczęła.');
   if (state.players.length < MIN_PLAYERS) fail(`Potrzeba co najmniej ${MIN_PLAYERS} graczy.`);
   const s = structuredClone(state);
+  s.rounds = s.roundsSetting ?? defaultRounds(s.players.length);
+  AUCTION_ORDER.slice(0, s.rounds).forEach((id, i) => (getLot(s, id)!.auctionNo = i + 1));
   s.firstPlayer = Math.floor(rng() * s.players.length);
   s.phase = 'setup';
   s.setupQueue = turnOrder(s).reverse();
@@ -177,7 +187,7 @@ export function startGame(state: GameState, rng: Rng = Math.random): GameState {
 function startRound(s: GameState) {
   s.round += 1;
   s.currentNews = s.secret.newsDeck.shift() ?? null;
-  const remaining = ROUNDS - s.round;
+  const remaining = s.rounds - s.round;
   s.newsPreview = s.secret.newsDeck.slice(0, Math.min(2, remaining));
   s.buildsThisRound = Object.fromEntries(s.players.map((p) => [p.id, 0]));
   s.actionSpaces = emptySpaces();
@@ -189,12 +199,14 @@ function startRound(s: GameState) {
       boom: ['brick', 2],
       renovation: ['wood', 2],
       steelImport: ['steel', -2],
+      brickGlut: ['brick', -2],
     };
     const eff = shift[s.currentNews];
     if (eff) s.prices[eff[0]] = clampPrice(s.prices[eff[0]] + eff[1]);
+    if (s.currentNews === 'highDemand') for (const m of MATERIALS) s.prices[m] = clampPrice(s.prices[m] + 1);
   }
 
-  const auctionLotId = AUCTION_ORDER[s.round - 1];
+  const auctionLotId = s.lots.find((l) => l.auctionNo === s.round)?.id;
   if (auctionLotId) {
     s.phase = 'auction';
     s.auctionLot = auctionLotId;
@@ -319,7 +331,7 @@ function endRound(s: GameState) {
   }
   for (const p of s.players) p.managersLeft = 0;
 
-  if (s.round >= ROUNDS) {
+  if (s.round >= s.rounds) {
     s.phase = 'gameOver';
     s.currentNews = null;
     s.newsPreview = [];

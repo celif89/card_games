@@ -10,7 +10,6 @@ import {
   MATERIAL_INFO,
   MAX_CONTRACTS_IN_HAND,
   NEWS,
-  ROUNDS,
   TERRAIN_INFO,
   type ActionSpaceId,
   type Material,
@@ -77,7 +76,7 @@ export function Game({ view, tutorial }: { view: GameView; tutorial: boolean }) 
       {tutorial && <Coach view={view} />}
       <header className={`topbar ${myTurn ? 'my-turn' : ''}`}>
         <div>
-          <strong>🏙️ Runda {Math.max(view.round, 1)}/{ROUNDS}</strong>
+          <strong>🏙️ Runda {Math.max(view.round, 1)}/{view.rounds}</strong>
           <span className="status">{status}</span>
           <div className="topbar-res">
             💰{me.money} 🪵{me.materials.wood} 🧱{me.materials.brick} 🔩{me.materials.steel} ⭐{me.prestige} · 👔{me.managersLeft}/{me.managers}

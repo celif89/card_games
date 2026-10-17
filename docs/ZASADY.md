@@ -7,8 +7,17 @@
 
 Gracze prowadzą firmy deweloperskie w rozwijającym się miasteczku. Kupują
 działki, produkują materiały budowlane, stawiają budynki, które przynoszą
-czynsz, i realizują zlecenia miasta. Po **8 rundach** (2 lata po 4 kwartały)
-wygrywa gracz z największym majątkiem.
+czynsz, i realizują zlecenia miasta. Po ostatniej rundzie wygrywa gracz
+z największym majątkiem.
+
+**Długość gry** (1 runda = 1 kwartał) — domyślnie zależy od liczby graczy,
+gospodarz może ją zmienić w poczekalni (8, 10, 12 lub 14 rund):
+
+| Graczy | Rund |
+|--------|------|
+| 2      | 14   |
+| 3      | 12   |
+| 4      | 10   |
 
 - 2–4 graczy, od 10 lat, 45–60 minut.
 - Losowa jest tylko kolejność kart Wiadomości i Zleceń. Zawsze widać kolejne
@@ -21,11 +30,11 @@ wygrywa gracz z największym majątkiem.
 ```
      A   B   C   D   E   F
 1    L   L*  Z   Z   G   G
-2    L   Z   Z   Z   Z   G
-3    Z   Z   C*  C*  Z   P
-4    Z   Z   C*  C*  Z   P*
-5    G*  Z   Z   Z   Z   P*
-6    G   Z   Z   Z   L   L
+2    L   Z   Z*  Z   Z   G
+3    Z   Z*  C*  C*  Z   P*
+4    Z   Z   C*  C*  Z*  P*
+5    G*  Z   Z   Z*  Z   P*
+6    G   Z   Z   Z   L*  L
 ```
 
 | Symbol | Teren       | Liczba | Cena zakupu |
@@ -36,8 +45,10 @@ wygrywa gracz z największym majątkiem.
 | P      | przemysłowa | 3      | 5           |
 | C      | centrum     | 4      | tylko licytacja |
 
-`*` — działka licytowana (patrz §5). Kolejność licytacji:
-1. C3 · 2. F4 · 3. D3 · 4. A5 · 5. C4 · 6. B1 · 7. D4 · 8. F5
+`*` — działka licytowana (patrz §5). W każdej rundzie licytuje się jedną działkę,
+w tej kolejności (w krótszej grze tylko tyle pierwszych, ile jest rund; pozostałe
+są zwykłymi działkami):
+1. C3 · 2. F4 · 3. D3 · 4. A5 · 5. C4 · 6. B1 · 7. D4 · 8. F5 · 9. E4 · 10. F3 · 11. B3 · 12. E6 · 13. C2 · 14. D5
 
 **Sąsiedztwo** = pola stykające się bokiem (bez skosów).
 
@@ -132,7 +143,7 @@ Zlecenie na koniec gry: −3 prestiżu.
 | Targowisko  | zwykła           | 3 drewna + 1 cegła             | 5 monet + 3 PP |
 | Muzeum      | centrum          | 4 cegły + 3 stal               | 10 monet + 9 PP |
 
-## 8. Karty Wiadomości (10 kart, w grze 8)
+## 8. Karty Wiadomości (15 kart, w grze jedna na rundę)
 
 | Karta | Efekt w tej rundzie |
 |-------|---------------------|
@@ -146,6 +157,11 @@ Zlecenie na koniec gry: −3 prestiżu.
 | Podatek od nieruchomości | płacisz 1 monetę za każde pełne 3 budynki |
 | Konkurs architektoniczny | gracz, który w tej rundzie postawi najwięcej budynków, dostaje 3 PP (remis: wszyscy remisujący) |
 | Dzień otwarty | każdy Park daje właścicielowi 2 monety |
+| Remont drogi | wszystkie działki kosztują o 1 więcej |
+| Rekordowe zamówienia | ceny wszystkich materiałów +1 |
+| Nadwyżka cegły | cena cegły −2 |
+| Festyn miejski | każdy budynek publiczny daje właścicielowi 2 monety |
+| Spokojny kwartał | nic się nie dzieje |
 
 ## 9. Handel między graczami
 
@@ -164,7 +180,7 @@ albo odrzuca.
 
 ## 11. Koniec gry i punktacja
 
-Po 8 rundach:
+Po ostatniej rundzie:
 
 **Wynik = gotówka + wartość budynków + 2 za każdą pustą działkę + prestiż
 + 1 za każde 2 materiały (w dół) − 12 za każdą niespłaconą pożyczkę
@@ -176,6 +192,5 @@ Remis: wygrywa gracz z większą gotówką.
 
 - Czy Dom (zwrot w ok. 5 rund) nie jest zbyt słaby w porównaniu z produkcją
   materiałów na sprzedaż.
-- Czy 8 rund to nie za mało, żeby postawić Biurowiec.
 - Czy kara za hałas nie jest zbyt złośliwa w grze rodzinnej.
 - Czy 4 Zlecenia na stole przy 4 graczach wystarczą.
