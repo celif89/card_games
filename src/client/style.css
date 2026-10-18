@@ -1,19 +1,22 @@
 :root {
-  --bg: #f4efe6;
-  --panel: #fffdf8;
-  --ink: #2b2a28;
-  --muted: #7a746a;
-  --line: #e2d9c8;
-  --accent: #2f4858;
+  --bg: #efe7d8;
+  --panel: #fffcf5;
+  --ink: #2f2a22;
+  --muted: #7d7365;
+  --line: #e6dcc8;
+  --accent: #24515f;
+  --accent-2: #2f6b7c;
   --accent-ink: #fff;
-  --good: #3c8d5a;
+  --gold: #e8b13a;
+  --good: #2f8a57;
   --warn: #c2412d;
-  --t-z: #cfe3a8;
-  --t-l: #6fa36b;
-  --t-g: #d9a377;
-  --t-p: #a7a9ad;
-  --t-c: #f2d27a;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --t-z: #cfe6a4;
+  --t-l: #6fa86a;
+  --t-g: #dda477;
+  --t-p: #a9adb3;
+  --t-c: #f2d98a;
+  --shadow: 0 1px 0 rgba(60, 40, 10, 0.05), 0 6px 20px rgba(60, 40, 10, 0.07);
+  font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }
@@ -340,9 +343,7 @@ select {
   right: 3px;
   font-size: 0.65rem;
 }
-.lot-building {
-  font-size: clamp(1.2rem, 5vw, 2rem);
-}
+
 .lot-yield {
   position: absolute;
   bottom: 2px;
@@ -805,4 +806,298 @@ select {
   color: var(--muted);
   border-bottom: none;
   padding-top: 8px;
+}
+
+.big-title {
+  margin-top: 14px !important;
+}
+.contract.big {
+  background: linear-gradient(160deg, #fff6d6, #fffaf0);
+  border-color: #e8c25a;
+}
+
+/* ===== Wygląd v2 ===== */
+body {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.6), transparent 40%),
+    var(--bg);
+}
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+button {
+  border-radius: 10px;
+  font-weight: 600;
+  transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+button:not(:disabled):not(.link):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(36, 81, 95, 0.15);
+}
+button.primary {
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+  border-color: var(--accent);
+}
+.panel,
+.board-wrap {
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border-color: rgba(0, 0, 0, 0.04);
+}
+.panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.topbar {
+  background: linear-gradient(100deg, #1d4350, #2f6b7c);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+.topbar.my-turn {
+  background: linear-gradient(100deg, #1f7a4a, #34a067);
+}
+
+/* Plansza jak makieta na drewnianym stole */
+.board-wrap {
+  background: linear-gradient(160deg, #e7d4ae, #d9bf8f);
+  border: 1px solid #c9a96d;
+}
+.board {
+  gap: 5px;
+}
+.board .axis {
+  color: #7a5c2e;
+  font-weight: 800;
+}
+.lot {
+  border-radius: 10px;
+  overflow: visible;
+  box-shadow:
+    inset 0 -3px 0 rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.lot.tz {
+  background-color: var(--t-z);
+  background-image: radial-gradient(rgba(90, 140, 50, 0.28) 1.1px, transparent 1.3px);
+  background-size: 9px 9px;
+}
+.lot.tl {
+  background-color: #79b06f;
+  background-image:
+    radial-gradient(circle at 50% 50%, #4f8f4b 0 2.8px, transparent 3.2px),
+    radial-gradient(circle at 50% 50%, #5f9c56 0 2.2px, transparent 2.6px);
+  background-size: 11px 11px, 11px 11px;
+  background-position: 0 0, 5.5px 5.5px;
+}
+.lot.tg {
+  background-color: var(--t-g);
+  background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgba(150, 80, 40, 0.16) 6px 8px);
+}
+.lot.tp {
+  background-color: var(--t-p);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.09) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.09) 0 1px, transparent 1px 14px);
+}
+.lot.tc {
+  background-color: var(--t-c);
+  background-image: conic-gradient(#ecd07a 25%, #f7e5ab 0 50%, #ecd07a 0 75%, #f7e5ab 0);
+  background-size: 12px 12px;
+}
+.lot.owned {
+  box-shadow:
+    inset 0 0 0 3px var(--owner),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.lot-owner {
+  position: absolute;
+  top: -2px;
+  right: 6px;
+  width: 11px;
+  height: 15px;
+  background: var(--owner);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+  z-index: 2;
+}
+.lot .lot-building {
+  width: 76%;
+  height: 76%;
+  margin-top: 4%;
+}
+.lot-id {
+  font-weight: 800;
+}
+.lot-yield {
+  font-weight: 700;
+  z-index: 2;
+}
+.lot-auction {
+  z-index: 2;
+}
+.legend i.tz {
+  background: var(--t-z);
+}
+.legend i.tl {
+  background: var(--t-l);
+}
+.legend i.tg {
+  background: var(--t-g);
+}
+.legend i.tp {
+  background: var(--t-p);
+}
+.legend i.tc {
+  background: var(--t-c);
+}
+.legend {
+  color: #6d5428;
+}
+
+/* Ilustracje budynków */
+.building-art {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.building-art svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.art-badge {
+  position: absolute;
+  right: -4%;
+  bottom: -2%;
+  font-size: 0.7em;
+  line-height: 1;
+  background: #fff;
+  border-radius: 50%;
+  padding: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.lot .art-badge {
+  font-size: clamp(0.55rem, 2.4vw, 0.85rem);
+}
+.art-level {
+  position: absolute;
+  left: -2%;
+  top: 0;
+  font-size: 0.6rem;
+  font-weight: 900;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 4px;
+  padding: 0 3px;
+}
+@keyframes smoke-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-4px);
+    opacity: 0.4;
+  }
+}
+.art-smoke {
+  animation: smoke-rise 2.4s ease-in-out infinite alternate;
+}
+.build-options button {
+  grid-template-columns: 44px 1fr auto;
+}
+.opt-icon {
+  width: 40px;
+  height: 40px;
+}
+.contract-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.contract-art {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+.contract {
+  border-radius: 12px;
+}
+
+/* Pola akcji */
+.space {
+  background: #fff;
+  border-radius: 12px;
+}
+.space.full {
+  background: #f3ede1;
+}
+.space-icon {
+  font-size: 1.1rem;
+}
+
+/* Ekran startowy */
+.skyline {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  margin: 4px auto -6px;
+  border-bottom: 3px solid rgba(47, 42, 34, 0.25);
+  padding-bottom: 2px;
+}
+.skyline .building-art {
+  width: 52px;
+  height: 52px;
+}
+.skyline .building-art:nth-child(3),
+.skyline .building-art:nth-child(5) {
+  width: 62px;
+  height: 62px;
+}
+.skyline .art-badge {
+  font-size: 0.75rem;
+}
+.home h1 {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--accent);
+}
+.home {
+  background: var(--panel);
+  margin-top: 24px;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 24px 20px;
+}
+@media (max-width: 460px) {
+  .home {
+    margin: 0;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+  .skyline .building-art {
+    width: 42px;
+    height: 42px;
+  }
+  .skyline .building-art:nth-child(3),
+  .skyline .building-art:nth-child(5) {
+    width: 50px;
+    height: 50px;
+  }
+}
+.res {
+  border-radius: 10px;
+  background: #fffaf0;
+}
+.price {
+  background: #fff;
+  border-radius: 12px;
 }

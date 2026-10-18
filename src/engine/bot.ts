@@ -3,6 +3,7 @@
 import {
   BUILDINGS,
   CONTRACTS,
+  projectInfo,
   HIRE_COST,
   LOAN_AMOUNT,
   MARKET_UNITS_PER_ACTION,
@@ -71,8 +72,9 @@ function buildGain(core: GameCore, me: Player, lot: Lot, o: BuildOption): number
   if (o.building === 'upgrade') value += BUILDINGS.tenement.value - BUILDINGS.house.value;
   else if (o.building === 'modernize') value += buildingValue({ ...lot, building }) - buildingValue(lot);
   else if (o.building === 'public') {
-    const c = CONTRACTS[o.contractId!];
-    value += c.rewardMoney + c.rewardPrestige + 3; // +3: unikamy kary za niezrealizowane zlecenie
+    const c = projectInfo(o.contractId!);
+    // Zwykłe zlecenie: +3, bo unikamy kary za niezrealizowane.
+    value += c.rewardMoney + c.rewardPrestige + (CONTRACTS[o.contractId!] ? 3 : 0);
   } else {
     value += BUILDINGS[o.building].value + (BUILDINGS[o.building].prestige ?? 0) - 2; // −2: działka przestaje być pusta
   }
@@ -104,6 +106,19 @@ function plans(core: GameCore, me: Player, lots: Lot[], extra: number): Plan[] {
     }
   }
   return out.sort((a, b) => b.gain - a.gain);
+}
+
+// Najbardziej opłacalna wielka inwestycja na wolnej działce bota (bez względu na brakujące materiały).
+function bigTarget(core: GameCore, me: Player, myLots: Lot[]): BuildOption | null {
+  let best: { o: BuildOption; gain: number } | null = null;
+  for (const lot of myLots.filter((l) => !l.building)) {
+    for (const o of buildOptions(core, me.id, lot.id, 0)) {
+      if (o.building !== 'public' || !core.bigProjects.includes(o.contractId!)) continue;
+      const gain = buildGain(core, me, lot, o);
+      if (gain > 10 && (!best || gain > best.gain)) best = { o, gain };
+    }
+  }
+  return best?.o ?? null;
 }
 
 function bundleWorth(core: GameCore, b: TradeBundle): number {
@@ -195,6 +210,9 @@ export function botAction(core: GameCore, playerId: string, rng: Rng = Math.rand
     const needed = emptyMaterials();
     const keepFor = r <= 2 ? future.filter((p) => MATERIALS.every((m) => p.missing[m] === 0)).slice(0, 1) : future.slice(0, 2);
     for (const p of keepFor) for (const m of MATERIALS) needed[m] += p.option.cost[m] ?? 0;
+    // Odkładamy materiały na wielką inwestycję, jeśli mamy na nią działkę i czas.
+    const big = r >= 3 ? bigTarget(core, me, myLots) : null;
+    if (big) for (const m of MATERIALS) needed[m] = Math.max(needed[m], big.cost[m] ?? 0);
     const amounts = emptyMaterials();
     let units = 0;
     for (const m of [...MATERIALS].sort((a, b) => core.prices[b] - core.prices[a])) {

@@ -94,6 +94,8 @@ export interface GameCore {
   newsPreview: NewsId[];
   openContracts: string[];
   contractDeckCount: number;
+  // Wielkie inwestycje, których nikt jeszcze nie zbudował.
+  bigProjects: string[];
   actionSpaces: Record<ActionSpaceId, string[]>;
   auctionLot: string | null;
   bidders: string[];

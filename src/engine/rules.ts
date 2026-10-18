@@ -2,7 +2,9 @@
 import {
   ACTION_SPACES,
   BUILDINGS,
+  BIG_PROJECTS,
   CONTRACTS,
+  projectInfo,
   EMPTY_LOT_VALUE,
   LOAN_PENALTY,
   MATERIALS,
@@ -155,6 +157,12 @@ export function buildOptions(core: GameCore, playerId: string, lotId: string, ex
     const cost = addMoney(c.cost, extra);
     options.push({ building: 'public', contractId: cid, label: `${c.name} (zlecenie)`, icon: c.icon, cost, ...check(cost) });
   }
+  for (const id of core.bigProjects) {
+    const c = BIG_PROJECTS[id];
+    if (!c.terrains.includes(lot.terrain)) continue;
+    const cost = addMoney(c.cost, extra);
+    options.push({ building: 'public', contractId: id, label: `${c.name} (wielka inwestycja)`, icon: c.icon, cost, ...check(cost) });
+  }
   return options;
 }
 
@@ -183,7 +191,7 @@ export function buildingValue(lot: Lot): number {
 }
 
 export function buildingName(b: { type: BuildingType; contractId?: string; level?: number }): string {
-  if (b.type === 'public') return CONTRACTS[b.contractId!].name;
+  if (b.type === 'public') return projectInfo(b.contractId!).name;
   return BUILDINGS[b.type].name + (b.level === 2 ? ' II' : '');
 }
 

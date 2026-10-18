@@ -161,7 +161,8 @@ const STEPS: Step[] = [
     body: (
       <p>
         Miasto zamawia budynki publiczne (szkoła, basen…). Bierzesz zlecenie polem „Ratusz”, a budujesz je akcją Buduj na swojej działce. Za
-        realizację dostajesz monety i prestiż. Uwaga: niezrealizowane zlecenie na koniec gry to −3 pkt.
+        realizację dostajesz monety i prestiż. Uwaga: niezrealizowane zlecenie na koniec gry to −3 pkt. Są też 🌟 <b>wielkie
+        inwestycje</b> (stadion, szpital…) — bardzo drogie, ale z ogromną nagrodą; buduje je ten, kto pierwszy zbierze materiały.
       </p>
     ),
   },

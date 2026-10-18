@@ -2,7 +2,9 @@ import { Fragment, useMemo, useState } from 'react';
 import {
   ACTION_SPACES,
   BUILDINGS,
+  BIG_PROJECTS,
   CONTRACTS,
+  projectInfo,
   HIRE_COST,
   LOAN_AMOUNT,
   MARKET_UNITS_PER_ACTION,
@@ -36,10 +38,23 @@ import type { Action, GameView, Lot, Materials, Player, TradeBundle } from '../e
 import { net } from './net.ts';
 import { RulesModal } from './Rules.tsx';
 import { Coach } from './Tutorial.tsx';
+import { BuildingArt } from './art.tsx';
 
 type Act = (a: Action) => void;
 
 const TERRAIN_CLASS: Record<Lot['terrain'], string> = { Z: 'tz', L: 'tl', G: 'tg', P: 'tp', C: 'tc' };
+
+const SPACE_ICONS: Record<ActionSpaceId, string> = {
+  buyLot: '🗺️',
+  build: '🏗️',
+  build2: '🏗️',
+  sell: '💱',
+  buy: '🛒',
+  townhall: '📜',
+  bank: '🏦',
+  hire: '👔',
+  firstPlayer: '🥇',
+};
 
 function playerOf(view: GameView, id: string | null | undefined): Player | undefined {
   return view.players.find((p) => p.id === id);
@@ -49,7 +64,7 @@ function buildingLabel(lot: Lot): { icon: string; name: string } | null {
   const b = lot.building;
   if (!b) return null;
   if (b.type === 'public') {
-    const c = CONTRACTS[b.contractId!];
+    const c = projectInfo(b.contractId!);
     return { icon: c.icon, name: c.name };
   }
   return { icon: BUILDINGS[b.type].icon, name: buildingName(b) };
@@ -215,8 +230,8 @@ function Row(props: { y: number; view: GameView; selected: string | null; onSele
           return (
             <button
               key={lot.id}
-              className={`lot ${TERRAIN_CLASS[lot.terrain]} ${selected === lot.id ? 'selected' : ''} ${highlight ? 'pickable' : ''} ${view.auctionLot === lot.id ? 'auctioned' : ''}`}
-              style={owner ? { boxShadow: `inset 0 0 0 4px ${owner.color}` } : undefined}
+              className={`lot ${TERRAIN_CLASS[lot.terrain]} ${selected === lot.id ? 'selected' : ''} ${highlight ? 'pickable' : ''} ${view.auctionLot === lot.id ? 'auctioned' : ''} ${owner ? 'owned' : ''}`}
+              style={owner ? ({ '--owner': owner.color } as React.CSSProperties) : undefined}
               onClick={() => onSelect(lot.id)}
               data-mine={lot.owner === view.me || undefined}
               data-forsale={lotPrice(view, lot) !== null || undefined}
@@ -225,8 +240,10 @@ function Row(props: { y: number; view: GameView; selected: string | null; onSele
               <span className="lot-id">{lot.id}</span>
               {upcomingAuction && <span className="lot-auction">🔨{lot.auctionNo}</span>}
               {lot.auctionUnsold && !lot.owner && <span className="lot-auction">6💰</span>}
-              {b && <span className="lot-building">{b.icon}</span>}
-              {lot.building?.level === 2 && <span className="lot-level">II</span>}
+              {owner && <span className="lot-owner" title={owner.name} />}
+              {lot.building && (
+                <BuildingArt type={lot.building.type} level={lot.building.level} contractId={lot.building.contractId} className="lot-building" />
+              )}
               {yieldText && <span className="lot-yield">{yieldText}</span>}
               {last?.lot === lot.id && (
                 <span key={last.index} className="lot-flash" style={{ '--flash': last.color } as React.CSSProperties} title="Ostatni ruch" />
@@ -307,7 +324,12 @@ function LotPanel({ view, lotId, act, onClose }: { view: GameView; lotId: string
               disabled={!canAct || !slot || !o.ok}
               onClick={() => act({ type: 'build', lotId: lot.id, building: o.building, contractId: o.contractId })}
             >
-              <span className="opt-icon">{o.icon}</span>
+              <BuildingArt
+                className="opt-icon"
+                type={o.building === 'upgrade' ? 'tenement' : o.building === 'modernize' ? lot.building!.type : o.building}
+                level={o.building === 'modernize' ? 2 : undefined}
+                contractId={o.contractId}
+              />
               <span className="opt-name">{o.label}</span>
               <span className="opt-cost">{formatCost(o.cost)}</span>
             </button>
@@ -346,7 +368,9 @@ function ActionBoard({ view, act }: { view: GameView; act: Act }) {
           return (
             <div key={s.id} className={`space ${free ? '' : 'full'}`}>
               <div className="space-head">
-                <strong>{s.name}</strong>
+                <strong>
+                  <span className="space-icon">{SPACE_ICONS[s.id]}</span> {s.name}
+                </strong>
                 <SpaceDots view={view} id={s.id} />
               </div>
               <div className="space-text">{s.text}</div>
@@ -468,16 +492,31 @@ function ContractsPanel({ view, act }: { view: GameView; act: Act }) {
         ))}
       </div>
       <p className="hint">Zlecenie realizujesz akcją Buduj na swojej działce. Budynek publiczny daje +1 czynszu sąsiednim mieszkaniom.</p>
+      {view.bigProjects.length > 0 && (
+        <>
+          <h3 className="big-title">🌟 Wielkie inwestycje</h3>
+          <p className="hint">
+            Nie trzeba ich brać w Ratuszu — zbierz materiały i zbuduj akcją Buduj na swojej działce. Każdą może postawić tylko jeden gracz: kto
+            pierwszy, ten lepszy!
+          </p>
+          <div className="contracts">
+            {view.bigProjects.map((id) => (
+              <ContractCard key={id} id={id} big />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 }
 
-function ContractCard({ id, children }: { id: string; children?: React.ReactNode }) {
-  const c = CONTRACTS[id];
+function ContractCard({ id, big, children }: { id: string; big?: boolean; children?: React.ReactNode }) {
+  const c = projectInfo(id);
   return (
-    <div className="contract">
+    <div className={`contract ${big ? 'big' : ''}`}>
       <div className="contract-title">
-        {c.icon} <strong>{c.name}</strong>
+        <BuildingArt type="public" contractId={id} className="contract-art" />
+        <strong>{c.name}</strong>
       </div>
       <div>Teren: {c.terrains.map((t) => TERRAIN_INFO[t].name).join(' / ')}</div>
       <div>Koszt: {formatCost(c.cost)}</div>

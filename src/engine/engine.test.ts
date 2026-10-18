@@ -171,6 +171,26 @@ describe('modernizacja i osiedla', () => {
   });
 });
 
+describe('wielkie inwestycje', () => {
+  it('można zbudować bez brania w Ratuszu, ale tylko raz w całej grze', () => {
+    let s = pickStartLots(newGame(), ['C1', 'E2']);
+    s = allBid(s, [0, 0]);
+    const [a, b] = [s.currentPlayer!, s.players.find((p) => p.id !== s.currentPlayer)!.id];
+    for (const id of [a, b]) {
+      getPlayer(s, id).materials = { wood: 20, brick: 20, steel: 20 };
+    }
+    const lotA = s.lots.find((l) => l.owner === a)!.id;
+    const lotB = s.lots.find((l) => l.owner === b)!.id;
+    const moneyBefore = getPlayer(s, a).money;
+    s = applyAction(s, a, { type: 'build', lotId: lotA, building: 'public', contractId: 'stadion' });
+    expect(getPlayer(s, a).money).toBe(moneyBefore + 27);
+    expect(getPlayer(s, a).prestige).toBe(27);
+    expect(getPlayer(s, a).materials).toEqual({ wood: 14, brick: 14, steel: 18 });
+    expect(s.bigProjects).not.toContain('stadion');
+    expect(() => applyAction(s, b, { type: 'build', lotId: lotB, building: 'public', contractId: 'stadion' })).toThrow();
+  });
+});
+
 describe('zasady pomocnicze', () => {
   it('rynek: każda sztuka zmienia cenę o 1', () => {
     expect(marketQuote({ wood: 3, brick: 4, steel: 6 }, { wood: 3 }, 'sell')).toEqual({

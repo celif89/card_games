@@ -3,7 +3,9 @@ import {
   ACTION_SPACES,
   AUCTION_ORDER,
   BUILDINGS,
+  BIG_PROJECTS,
   CONTRACTS,
+  projectInfo,
   HIRE_COST,
   LOAN_AMOUNT,
   MAP,
@@ -105,6 +107,7 @@ export function createGame(rng: Rng = Math.random): GameState {
     newsPreview: [],
     openContracts,
     contractDeckCount: contractDeck.length,
+    bigProjects: Object.keys(BIG_PROJECTS),
     actionSpaces: emptySpaces(),
     auctionLot: null,
     bidders: [],
@@ -474,12 +477,14 @@ export function applyAction(state: GameState, playerId: string, action: Action):
         lot.building = { ...lot.building!, level: 2 };
         log(s, `${p.name} modernizuje ${buildingName(lot.building)} (${lot.id}).`, p.id, lot.id);
       } else if (action.building === 'public') {
-        const c = CONTRACTS[action.contractId!];
+        const c = projectInfo(action.contractId!);
         lot.building = { type: 'public', contractId: action.contractId };
-        p.contracts = p.contracts.filter((cid) => cid !== action.contractId);
+        if (BIG_PROJECTS[action.contractId!]) s.bigProjects = s.bigProjects.filter((id) => id !== action.contractId);
+        else p.contracts = p.contracts.filter((cid) => cid !== action.contractId);
         p.money += c.rewardMoney;
         p.prestige += c.rewardPrestige;
-        log(s, `${p.name} buduje ${c.name} (${lot.id}): +${c.rewardMoney} 💰, +${c.rewardPrestige} PP.`, p.id, lot.id);
+        const big = BIG_PROJECTS[action.contractId!] ? '🌟 wielką inwestycję ' : '';
+        log(s, `${p.name} buduje ${big}${c.name} (${lot.id}): +${c.rewardMoney} 💰, +${c.rewardPrestige} PP.`, p.id, lot.id);
       } else {
         const info = BUILDINGS[action.building];
         lot.building = { type: action.building };

@@ -107,20 +107,34 @@ export interface ContractInfo {
   rewardPrestige: number;
 }
 
+// Nagroda ≈ 1,3 × wartość materiałów po cenie bazowej (+1).
 export const CONTRACTS: Record<string, ContractInfo> = {
-  boisko: { name: 'Boisko', icon: '⚽', terrains: ['Z'], cost: { wood: 2 }, rewardMoney: 2, rewardPrestige: 2 },
-  remiza: { name: 'Remiza', icon: '🚒', terrains: ['Z'], cost: { wood: 2, brick: 2 }, rewardMoney: 5, rewardPrestige: 3 },
-  przedszkole: { name: 'Przedszkole', icon: '🧸', terrains: ['Z'], cost: { wood: 3, brick: 2 }, rewardMoney: 6, rewardPrestige: 4 },
-  szkola: { name: 'Szkoła', icon: '🏫', terrains: ['Z'], cost: { wood: 2, brick: 3, steel: 1 }, rewardMoney: 8, rewardPrestige: 5 },
-  przychodnia: { name: 'Przychodnia', icon: '🏥', terrains: ['Z', 'C'], cost: { wood: 1, brick: 2, steel: 2 }, rewardMoney: 8, rewardPrestige: 5 },
-  biblioteka: { name: 'Biblioteka', icon: '📚', terrains: ['C'], cost: { wood: 1, brick: 3, steel: 1 }, rewardMoney: 6, rewardPrestige: 6 },
-  basen: { name: 'Basen', icon: '🏊', terrains: ['Z'], cost: { brick: 4, steel: 2 }, rewardMoney: 9, rewardPrestige: 6 },
-  dworzec: { name: 'Dworzec', icon: '🚉', terrains: ['Z'], cost: { brick: 3, steel: 3 }, rewardMoney: 10, rewardPrestige: 7 },
-  ratusz: { name: 'Ratusz-filia', icon: '🏛️', terrains: ['C'], cost: { wood: 2, brick: 2, steel: 2 }, rewardMoney: 8, rewardPrestige: 7 },
-  kosciol: { name: 'Kościół', icon: '⛪', terrains: ['Z'], cost: { wood: 1, brick: 5 }, rewardMoney: 7, rewardPrestige: 6 },
-  targowisko: { name: 'Targowisko', icon: '🧺', terrains: ['Z'], cost: { wood: 3, brick: 1 }, rewardMoney: 5, rewardPrestige: 3 },
-  muzeum: { name: 'Muzeum', icon: '🖼️', terrains: ['C'], cost: { brick: 4, steel: 3 }, rewardMoney: 10, rewardPrestige: 9 },
+  boisko: { name: 'Boisko', icon: '⚽', terrains: ['Z'], cost: { wood: 2 }, rewardMoney: 4, rewardPrestige: 5 },
+  remiza: { name: 'Remiza', icon: '🚒', terrains: ['Z'], cost: { wood: 2, brick: 2 }, rewardMoney: 9, rewardPrestige: 10 },
+  przedszkole: { name: 'Przedszkole', icon: '🧸', terrains: ['Z'], cost: { wood: 3, brick: 2 }, rewardMoney: 10, rewardPrestige: 13 },
+  szkola: { name: 'Szkoła', icon: '🏫', terrains: ['Z'], cost: { wood: 2, brick: 3, steel: 1 }, rewardMoney: 14, rewardPrestige: 18 },
+  przychodnia: { name: 'Przychodnia', icon: '🩺', terrains: ['Z', 'C'], cost: { wood: 1, brick: 2, steel: 2 }, rewardMoney: 14, rewardPrestige: 17 },
+  biblioteka: { name: 'Biblioteka', icon: '📚', terrains: ['C'], cost: { wood: 1, brick: 3, steel: 1 }, rewardMoney: 13, rewardPrestige: 15 },
+  basen: { name: 'Basen', icon: '🏊', terrains: ['Z'], cost: { brick: 4, steel: 2 }, rewardMoney: 17, rewardPrestige: 20 },
+  dworzec: { name: 'Dworzec', icon: '🚉', terrains: ['Z'], cost: { brick: 3, steel: 3 }, rewardMoney: 18, rewardPrestige: 22 },
+  ratusz: { name: 'Ratusz-filia', icon: '🏤', terrains: ['C'], cost: { wood: 2, brick: 2, steel: 2 }, rewardMoney: 16, rewardPrestige: 19 },
+  kosciol: { name: 'Kościół', icon: '⛪', terrains: ['Z'], cost: { wood: 1, brick: 5 }, rewardMoney: 14, rewardPrestige: 17 },
+  targowisko: { name: 'Targowisko', icon: '🧺', terrains: ['Z'], cost: { wood: 3, brick: 1 }, rewardMoney: 8, rewardPrestige: 10 },
+  muzeum: { name: 'Muzeum', icon: '🖼️', terrains: ['C'], cost: { brick: 4, steel: 3 }, rewardMoney: 20, rewardPrestige: 25 },
 };
+
+// Wielkie inwestycje: widoczne od początku, każdą może zbudować tylko jeden gracz (kto pierwszy, ten lepszy).
+// Nie trzeba ich brać w Ratuszu — buduje się je od razu akcją Buduj. Nagroda ≈ wartość materiałów po cenie bazowej.
+export const BIG_PROJECTS: Record<string, ContractInfo> = {
+  stadion: { name: 'Stadion', icon: '🏟️', terrains: ['Z'], cost: { wood: 6, brick: 6, steel: 2 }, rewardMoney: 27, rewardPrestige: 27 },
+  szpital: { name: 'Szpital', icon: '🏥', terrains: ['Z', 'C'], cost: { wood: 2, brick: 6, steel: 4 }, rewardMoney: 27, rewardPrestige: 27 },
+  uniwersytet: { name: 'Uniwersytet', icon: '🎓', terrains: ['Z'], cost: { wood: 4, brick: 8, steel: 2 }, rewardMoney: 28, rewardPrestige: 28 },
+  ratuszMiejski: { name: 'Ratusz miejski', icon: '🏛️', terrains: ['C'], cost: { wood: 4, brick: 6, steel: 4 }, rewardMoney: 30, rewardPrestige: 30 },
+};
+
+// Zlecenie albo wielka inwestycja — po identyfikatorze.
+export const projectInfo = (id: string): ContractInfo => CONTRACTS[id] ?? BIG_PROJECTS[id];
+
 export const OPEN_CONTRACTS = 4;
 
 export type NewsId =

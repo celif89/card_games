@@ -5,6 +5,7 @@ import type { GameView } from '../engine/types.ts';
 import { inviteLink, net, useNet, type Status } from './net.ts';
 import { Game } from './Game.tsx';
 import { RulesModal } from './Rules.tsx';
+import { Skyline } from './art.tsx';
 
 const NAME_KEY = 'miasteczko-name';
 
@@ -77,7 +78,8 @@ function Home({ busy }: { busy: boolean }) {
 
   return (
     <div className="home">
-      <h1>🏙️ Miasteczko S.A.</h1>
+      <Skyline />
+      <h1>Miasteczko S.A.</h1>
       <p className="subtitle">Rodzinna gra o budowaniu miasteczka</p>
       <label>
         Twoje imię
@@ -177,7 +179,8 @@ function Lobby({ view, code, host }: { view: GameView; code: string; host: strin
 
   return (
     <div className="home lobby">
-      <h1>🏙️ Miasteczko S.A.</h1>
+      <Skyline />
+      <h1>Miasteczko S.A.</h1>
       <div className="room-code">
         <span>Kod pokoju</span>
         <strong>{code}</strong>

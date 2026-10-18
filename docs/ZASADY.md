@@ -139,18 +139,32 @@ Zlecenie na koniec gry: −3 prestiżu.
 
 | Zlecenie    | Teren            | Koszt                          | Nagroda             |
 |-------------|------------------|--------------------------------|---------------------|
-| Boisko      | zwykła           | 2 drewna                       | 2 monety + 2 PP |
-| Remiza      | zwykła           | 2 drewna + 2 cegły             | 5 monet + 3 PP |
-| Przedszkole | zwykła           | 3 drewna + 2 cegły             | 6 monet + 4 PP |
-| Szkoła      | zwykła           | 2 drewna + 3 cegły + 1 stal    | 8 monet + 5 PP |
-| Przychodnia | zwykła / centrum | 1 drewno + 2 cegły + 2 stal    | 8 monet + 5 PP |
-| Biblioteka  | centrum          | 1 drewno + 3 cegły + 1 stal    | 6 monet + 6 PP |
-| Basen       | zwykła           | 4 cegły + 2 stal               | 9 monet + 6 PP |
-| Dworzec     | zwykła           | 3 cegły + 3 stal               | 10 monet + 7 PP |
-| Ratusz-filia| centrum          | 2 drewna + 2 cegły + 2 stal    | 8 monet + 7 PP |
-| Kościół     | zwykła           | 1 drewno + 5 cegieł            | 7 monet + 6 PP |
-| Targowisko  | zwykła           | 3 drewna + 1 cegła             | 5 monet + 3 PP |
-| Muzeum      | centrum          | 4 cegły + 3 stal               | 10 monet + 9 PP |
+| Boisko      | zwykła           | 2 drewna                       | 4 monety + 5 PP |
+| Targowisko  | zwykła           | 3 drewna + 1 cegła             | 8 monet + 10 PP |
+| Remiza      | zwykła           | 2 drewna + 2 cegły             | 9 monet + 10 PP |
+| Przedszkole | zwykła           | 3 drewna + 2 cegły             | 10 monet + 13 PP |
+| Biblioteka  | centrum          | 1 drewno + 3 cegły + 1 stal    | 13 monet + 15 PP |
+| Szkoła      | zwykła           | 2 drewna + 3 cegły + 1 stal    | 14 monet + 18 PP |
+| Przychodnia | zwykła / centrum | 1 drewno + 2 cegły + 2 stal    | 14 monet + 17 PP |
+| Kościół     | zwykła           | 1 drewno + 5 cegieł            | 14 monet + 17 PP |
+| Ratusz-filia| centrum          | 2 drewna + 2 cegły + 2 stal    | 16 monet + 19 PP |
+| Basen       | zwykła           | 4 cegły + 2 stal               | 17 monet + 20 PP |
+| Dworzec     | zwykła           | 3 cegły + 3 stal               | 18 monet + 22 PP |
+| Muzeum      | centrum          | 4 cegły + 3 stal               | 20 monet + 25 PP |
+
+### Wielkie inwestycje
+
+Cztery wielkie inwestycje są widoczne od początku gry. **Nie trzeba ich brać
+w Ratuszu** — kto zbierze materiały, buduje je akcją Buduj na swojej działce.
+Każdą może zbudować tylko jeden gracz (kto pierwszy, ten lepszy). Działają jak
+budynek publiczny (+1 czynszu sąsiednim mieszkaniom).
+
+| Inwestycja     | Teren            | Koszt                            | Nagroda           |
+|----------------|------------------|----------------------------------|-------------------|
+| Stadion        | zwykła           | 6 drewna + 6 cegieł + 2 stal     | 27 monet + 27 PP |
+| Szpital        | zwykła / centrum | 2 drewna + 6 cegieł + 4 stal     | 27 monet + 27 PP |
+| Uniwersytet    | zwykła           | 4 drewna + 8 cegieł + 2 stal     | 28 monet + 28 PP |
+| Ratusz miejski | centrum          | 4 drewna + 6 cegieł + 4 stal     | 30 monet + 30 PP |
 
 ## 8. Karty Wiadomości (15 kart, w grze jedna na rundę)
 
