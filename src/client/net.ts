@@ -5,6 +5,7 @@ import { useSyncExternalStore } from 'react';
 import type { GameView } from '../engine/types.ts';
 import type { ClientMessage, ServerMessage } from '../net/protocol.ts';
 import { Room, type Client, type RoomSnapshot } from '../net/room.ts';
+import { upgradeState } from '../engine/engine.ts';
 
 const SESSION_KEY = 'miasteczko-session';
 export const TUTORIAL_STEP_KEY = 'miasteczko-tutorial-step';
@@ -58,6 +59,17 @@ export const storage = {
   },
 };
 
+// Usuwa zapisaną sesję i stan pokoju z pamięci przeglądarki.
+export function clearSavedGame() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key === SESSION_KEY || key === TUTORIAL_STEP_KEY || key.startsWith('miasteczko-room-')) localStorage.removeItem(key);
+    }
+  } catch {
+    // brak dostępu do pamięci przeglądarki
+  }
+}
+
 const randomCode = () => Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => CODE_LETTERS[b % CODE_LETTERS.length]).join('');
 
 class Net {
@@ -73,12 +85,19 @@ class Net {
 
   constructor() {
     const session = storage.get<Session>(SESSION_KEY);
-    if (session?.isHost) {
-      const snapshot = storage.get<RoomSnapshot>(roomKey(session.code));
-      if (snapshot) this.startHost(session.code, Room.restore(snapshot, (s) => storage.set(roomKey(session.code), s)), session);
-      else storage.set(SESSION_KEY, null);
-    } else if (session) {
-      this.startGuest(session.code);
+    try {
+      if (session?.isHost) {
+        const snapshot = storage.get<RoomSnapshot>(roomKey(session.code));
+        if (snapshot) this.startHost(session.code, Room.restore(snapshot, (s) => storage.set(roomKey(session.code), s)), session);
+        else storage.set(SESSION_KEY, null);
+      } else if (session) {
+        this.startGuest(session.code);
+      }
+    } catch (err) {
+      // Zapis z niezgodnej wersji gry — zaczynamy od ekranu startowego.
+      console.error('Nie udało się wznowić gry', err);
+      clearSavedGame();
+      this.reset();
     }
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') this.wake();
@@ -258,7 +277,8 @@ class Net {
         if (!this.room) storage.set(SESSION_KEY, { code: this.state.code, playerId: msg.playerId, token: msg.token, isHost: false });
         return;
       case 'state':
-        this.update({ view: msg.view, host: msg.host });
+        // Gospodarz może mieć starszą wersję gry — uzupełniamy brakujące pola.
+        this.update({ view: upgradeState(msg.view), host: msg.host });
         return;
       case 'error':
         if (this.pendingJoin !== null) this.reset();

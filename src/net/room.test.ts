@@ -116,4 +116,25 @@ describe('pokój gry', () => {
     expect(view.scores).toHaveLength(4);
     expect(host.inbox.some((m) => m.t === 'error')).toBe(false);
   });
+
+  it('wznawia grę zapisaną przez starszą wersję (bez nowszych pól)', () => {
+    const { room, host, hostToken, saved } = setup();
+    room.handle(host, { t: 'addBot' });
+    room.handle(host, { t: 'start' });
+    const old = structuredClone(saved()) as any;
+    // Tak wyglądał zapis sprzed dodania długości gry, botów i wielkich inwestycji.
+    delete old.state.rounds;
+    delete old.state.roundsSetting;
+    delete old.state.bigProjects;
+    for (const p of old.state.players) delete p.bot;
+    const restored = Room.restore(old, () => {});
+    const host2 = fakeClient();
+    restored.handle(host2, { t: 'resume', playerId: restored.host, token: hostToken });
+    const view = last(host2, 'state')!.view;
+    expect(view.rounds).toBe(8);
+    expect(view.bigProjects.length).toBe(4);
+    expect(view.players.every((p) => typeof p.bot === 'boolean')).toBe(true);
+    expect(host2.inbox.some((m) => m.t === 'error')).toBe(false);
+  });
 });
+

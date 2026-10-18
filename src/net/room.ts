@@ -1,5 +1,5 @@
 // Pokój gry prowadzony przez gospodarza (w jego przeglądarce). Niezależny od sposobu przesyłania wiadomości.
-import { GameError, addPlayer, applyAction, createGame, removePlayer, setConnected, setRounds, startGame, viewFor } from '../engine/engine.ts';
+import { GameError, upgradeState, addPlayer, applyAction, createGame, removePlayer, setConnected, setRounds, startGame, viewFor } from '../engine/engine.ts';
 import { botAction, botTradeResponse } from '../engine/bot.ts';
 import { MAX_PLAYERS } from '../engine/data.ts';
 import type { Action, GameState } from '../engine/types.ts';
@@ -37,7 +37,7 @@ export class Room {
     private onChange: (s: RoomSnapshot) => void,
     private schedule: Scheduler,
   ) {
-    this.state = snapshot.state;
+    this.state = upgradeState(snapshot.state);
     this.tokens = snapshot.tokens;
     this.host = snapshot.host;
     // Po odtworzeniu z zapisu nikt nie jest jeszcze połączony.

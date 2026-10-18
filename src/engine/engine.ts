@@ -45,7 +45,7 @@ import {
   spaceFree,
   turnOrder,
 } from './rules.ts';
-import type { Action, GameState, GameView, Lot, Materials, Player, TradeBundle } from './types.ts';
+import type { Action, GameCore, GameState, GameView, Lot, Materials, Player, TradeBundle } from './types.ts';
 
 export class GameError extends Error {}
 
@@ -123,6 +123,21 @@ export function createGame(rng: Rng = Math.random): GameState {
       contractDeck,
     },
   };
+}
+
+// Uzupełnia stan zapisany przez starszą wersję gry o pola dodane później,
+// żeby po aktualizacji dało się dokończyć rozpoczętą grę.
+export function upgradeState<T extends GameCore>(state: T): T {
+  const defaults = createGame(() => 0.5) as unknown as Record<string, unknown>;
+  const out = { ...state } as unknown as Record<string, unknown>;
+  for (const key of Object.keys(defaults)) {
+    if (key !== 'secret' && out[key] === undefined) out[key] = structuredClone(defaults[key]);
+  }
+  // Starsze wersje miały zawsze 8 rund.
+  if ((state as Partial<GameCore>).rounds === undefined && state.phase !== 'lobby') out.rounds = 8;
+  out.players = state.players.map((p) => ({ ...p, bot: p.bot ?? false, contracts: p.contracts ?? [] }));
+  out.log = (state.log ?? []).filter((e) => e && typeof e.text === 'string');
+  return out as unknown as T;
 }
 
 function log(s: GameState, text: string, player?: string, lot?: string) {
